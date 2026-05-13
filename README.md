@@ -1,59 +1,84 @@
-# GoldShares
+# نظام إدارة جمعية أسهم الذهب (Gold Shares Management System)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.0.
+موقع احترافي لإدارة جمعيات الذهب، مبني باستخدام **Angular 17+ (Standalone)** و **Supabase**.
 
-## Development server
+## المميزات
+- **تصميم RTL بالكامل**: متوافق مع اللغة العربية وتصميم عصري مريح للعين.
+- **إدارة المستخدمين**: إضافة وتعديل وحذف المشتركين (سهم كامل أو نصف سهم).
+- **نظام معاملات ذكي**: إضافة جرامات، مراجعة الأدمن، وتحديث تلقائي للرصيد.
+- **حساب التأخير**: تنبيه تلقائي للمتأخرين عن السداد بناءً على جدول زمني (كل 3 أشهر).
+- **حماية المسارات**: نظام تسجيل دخول وحماية للمسارات حسب الصلاحيات (أدمن / مستخدم).
 
-To start a local development server, run:
+## المتطلبات الأساسية
+- **Node.js** (نسخة 18 أو أحدث).
+- **Angular CLI**.
+- حساب على **Supabase**.
 
-```bash
-ng serve
+## طريقة التشغيل
+1. قم بتحميل المشروع.
+2. قم بتشغيل الأمر التالي لتثبيت المكتبات:
+   ```bash
+   npm install
+   ```
+3. اذهب إلى ملف `src/environments/environment.ts` وقم بوضع بيانات الـ API الخاصة بـ Supabase:
+   ```typescript
+   export const environment = {
+     supabaseUrl: 'رابط_مشروعك_هنا',
+     supabaseKey: 'مفتاح_الـ_API_هنا'
+   };
+   ```
+4. لتشغيل المشروع محلياً:
+   ```bash
+   npm start
+   ```
+
+## ربط قاعدة البيانات (Supabase)
+قم بتنفيذ الأوامر التالية في **SQL Editor** داخل Supabase لإنشاء الجداول المطلوبة:
+
+```sql
+create table users (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  username text not null,
+  password text not null,
+  share_type text not null check (share_type in ('full', 'half')),
+  مقدم numeric default 0,
+  المتبقي numeric default 0,
+  المسدد numeric default 0,
+  اجمالي_المبالغ numeric default 0,
+  تم_الاستلام boolean default false,
+  role text default 'user',
+  created_at timestamp default now()
+);
+
+create table pending_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  gram_price numeric not null,
+  grams numeric not null,
+  amount numeric not null,
+  created_at timestamp default now()
+);
+
+create table approved_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  gram_price numeric not null,
+  grams numeric not null,
+  amount numeric not null,
+  transaction_number serial,
+  created_at timestamp default now()
+);
+
+-- إضافة حساب أدمن تجريبي
+insert into users (email, username, password, share_type, role)
+values ('admin@gold.com', 'المدير العام', 'admin123', 'full', 'admin');
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## هيكلية المشروع
+- `src/app/core`: يحتوي على الخدمات (Services)، الحماية (Guards)، والواجهات (Interfaces).
+- `src/app/shared`: المكونات المشتركة مثل الـ Navbar والـ Sidebar والـ Layouts.
+- `src/app/features`: الأجزاء الرئيسية للموقع (Admin / User / Auth).
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## التواصل
+تم التطوير بواسطة **Antigravity AI**.
