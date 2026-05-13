@@ -286,8 +286,18 @@ export class ProfileComponent implements OnInit {
     if (result.isConfirmed) {
       this.saving.set(true);
       const userId = this.authService.currentUser()?.id;
+      
+      // Clean data: Convert empty strings to null for better DB compatibility
+      const rawValues = this.profileForm.value;
+      const cleanedData: any = {};
+      
+      Object.keys(rawValues).forEach(key => {
+        const val = rawValues[key];
+        cleanedData[key] = (val === '' || val === undefined) ? null : val;
+      });
+
       const profileData = {
-        ...this.profileForm.value,
+        ...cleanedData,
         id: userId,
         is_locked: true
       };
@@ -295,7 +305,13 @@ export class ProfileComponent implements OnInit {
       const { error } = await this.dataService.saveUserProfile(profileData);
       
       if (error) {
-        Swal.fire('فشل الحفظ', error.message, 'error');
+        console.error('Save error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'فشل الحفظ',
+          text: `حدث خطأ: ${error.message}. تأكد من إعدادات قاعدة البيانات.`,
+          confirmButtonText: 'حسناً'
+        });
       } else {
         Swal.fire('تم بنجاح', 'تم حفظ بياناتك بنجاح.', 'success');
         this.isLocked = true;

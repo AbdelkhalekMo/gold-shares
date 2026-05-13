@@ -182,7 +182,7 @@ export class DataService {
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
   }
 
   async getAllUserProfiles() {
