@@ -35,3 +35,37 @@ export interface Stats {
   totalMoney: number;
   totalGrams: number;
 }
+
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  birth_date: string;
+  age: number;
+  address: string;
+  educational_level: string;
+  graduation_date: string;
+  job: string;
+  job_location: string;
+  is_permanent: string;
+  works_in_field: string;
+  job_start_date: string;
+  avg_net_income: number;
+  can_commit_monthly: string;
+  knows_gold_price_changes: string;
+  planned_for_gold_increase: string;
+  responsible_for_payment: string;
+  marriage_current_step: string;
+  marriage_next_step: string;
+  marriage_next_step_date: string;
+  will_provide_shabka: string;
+  shabka_gold_needed: number;
+  delayed_gold_until_wedding: number;
+  expected_wedding_date: string;
+  advance_payment_day: string;
+  monthly_payment_day: string;
+  expected_shabka_delivery_date: string;
+  notes: string;
+  is_locked: boolean;
+  created_at?: string;
+  updated_at?: string;
+}

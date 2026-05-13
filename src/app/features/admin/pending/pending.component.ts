@@ -9,40 +9,52 @@ import Swal from 'sweetalert2';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
-    <div class="pending-page animate-fade-in">
+    <div class="pending-page animate-spring">
       <div class="page-header">
-        <h1>المعاملات المعلقة</h1>
-        <p>مراجعة طلبات إضافة الجرامات من المستخدمين</p>
-        <button class="btn btn-outline btn-sm" (click)="loadPending()">🔄 تحديث</button>
+        <div class="title">
+          <h1 class="islamic-header text-gradient">الطلبات المعلقة</h1>
+          <p class="subtitle">مراجعة وتدقيق طلبات إضافة الأوزان المقدمة من الأعضاء</p>
+        </div>
+        <button class="btn btn-glass" (click)="loadPending()">🔄 تحديث القائمة</button>
       </div>
 
-      <div *ngIf="loading" class="loading-state">
-        <p>جاري التحميل...</p>
+      <div *ngIf="loading" class="modern-loading">
+        <div class="loader-orb"></div>
+        <p>جاري فحص الطلبات الجديدة...</p>
       </div>
 
       <ng-container *ngIf="!loading">
-        <div class="table-container" *ngIf="pendingTxs.length > 0; else empty">
+        <div class="table-container animate-spring" *ngIf="pendingTxs.length > 0; else empty">
           <table>
             <thead>
               <tr>
-                <th>اسم المستخدم</th>
-                <th>سعر الجرام</th>
-                <th>عدد الجرامات</th>
-                <th>المبلغ</th>
-                <th>التاريخ</th>
-                <th>الإجراءات</th>
+                <th>المشترك</th>
+                <th>سعر اليوم</th>
+                <th>الوزن المطلوب</th>
+                <th>القيمة الإجمالية</th>
+                <th>وقت الطلب</th>
+                <th>القرار</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let tx of pendingTxs">
-                <td class="font-bold">{{ tx.user?.username || 'غير معروف' }}</td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
+                    <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                  </div>
+                </td>
                 <td>{{ tx.gram_price | number }} ج.م</td>
-                <td class="grams">{{ tx.grams | number:'1.0-3' }} جم</td>
+                <td class="text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</td>
                 <td>{{ tx.amount | number }} ج.م</td>
-                <td>{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+                <td class="date-cell">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
                 <td class="actions">
-                  <button (click)="approve(tx)" class="btn-action approve">✓ موافقة</button>
-                  <button (click)="reject(tx)" class="btn-action reject">✗ رفض</button>
+                  <button (click)="approve(tx)" class="decision-btn approve">
+                    <span class="icon">✓</span>
+                  </button>
+                  <button (click)="reject(tx)" class="decision-btn reject">
+                    <span class="icon">×</span>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -50,40 +62,38 @@ import Swal from 'sweetalert2';
         </div>
 
         <ng-template #empty>
-          <div class="empty-state card">
-            <div class="icon">✨</div>
-            <h3>لا توجد معاملات معلقة</h3>
-            <p>جميع الطلبات تم التعامل معها بنجاح.</p>
+          <div class="modern-empty card">
+            <div class="empty-icon">✨</div>
+            <h3>لا توجد طلبات معلقة</h3>
+            <p>جميع طلبات الأعضاء تمت معالجتها بدقة.</p>
           </div>
         </ng-template>
       </ng-container>
     </div>
   `,
   styles: [`
-    .page-header {
-      display: flex; align-items: center; gap: 1rem;
-      flex-wrap: wrap; margin-bottom: 2rem;
-      h1 { font-size: 1.75rem; font-weight: 800; flex: 1; }
-      p { color: var(--text-muted); width: 100%; margin-top: -0.5rem; }
+    .pending-page { padding: 1rem 0; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3.5rem; }
+    .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem; }
+
+    .user-cell { display: flex; align-items: center; gap: 1rem; 
+      .user-avatar { width: 38px; height: 38px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 1px solid var(--glass-border); }
+      .username { font-weight: 800; }
     }
-    .btn-sm { padding: 0.4rem 1rem; font-size: 0.82rem; }
-    .actions { display: flex; gap: 0.5rem; }
-    .btn-action {
-      padding: 0.4rem 0.875rem; border-radius: 8px;
-      border: none; font-weight: 700; cursor: pointer; font-size: 0.82rem;
-      &.approve { background: var(--primary); color: #000; }
-      &.reject { background: #fee2e2; color: #991b1b; }
-      &:hover { opacity: 0.8; }
+    .date-cell { color: var(--text-muted); font-size: 0.85rem; }
+
+    .actions { display: flex; gap: 0.75rem; }
+    .decision-btn {
+      width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+      .icon { font-size: 1.25rem; font-weight: 900; }
+      &.approve:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-3px) rotate(10deg); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
+      &.reject:hover { background: #ff4d4d; border-color: #ff4d4d; transform: translateY(-3px) rotate(-10deg); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3); }
     }
-    .grams { font-weight: 700; color: var(--success); }
-    .font-bold { font-weight: 700; }
-    .loading-state { text-align: center; padding: 3rem; color: var(--text-muted); }
-    .empty-state {
-      text-align: center; padding: 4rem 2rem;
-      .icon { font-size: 3rem; margin-bottom: 1rem; }
-      h3 { margin-bottom: 0.5rem; font-size: 1.25rem; }
-      p { color: var(--text-muted); }
-    }
+
+    .modern-loading { text-align: center; padding: 5rem; .loader-orb { width: 40px; height: 40px; border: 3px solid transparent; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modern-empty { text-align: center; padding: 6rem 2rem; .empty-icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3; } }
   `]
 })
 export class PendingComponent implements OnInit {

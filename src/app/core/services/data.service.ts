@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { User, Stats } from '../interfaces/models.interface';
+import { User, Stats, UserProfile } from '../interfaces/models.interface';
+
 import Swal from 'sweetalert2';
 
 @Injectable({
@@ -15,6 +16,14 @@ export class DataService {
       .from('users')
       .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at')
       .order('created_at', { ascending: false });
+  }
+
+  async getUser(id: string) {
+    return await this.supabaseSvc.client
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
   }
 
   async addUser(userData: any) {
@@ -165,5 +174,34 @@ export class DataService {
       totalMoney,
       totalGrams
     };
+  }
+
+  // --- User Profiles ---
+  async getUserProfile(userId: string) {
+    return await this.supabaseSvc.client
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+  }
+
+  async getAllUserProfiles() {
+    return await this.supabaseSvc.client
+      .from('user_profiles')
+      .select('*, user:users(username, email)')
+      .order('created_at', { ascending: false });
+  }
+
+  async saveUserProfile(profile: any) {
+    return await this.supabaseSvc.client
+      .from('user_profiles')
+      .insert([profile]);
+  }
+
+  async updateUserProfile(userId: string, updates: any) {
+    return await this.supabaseSvc.client
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', userId);
   }
 }

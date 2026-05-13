@@ -31,12 +31,13 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
     }
     .content-area {
       flex: 1;
-      padding: 2rem;
-      background: var(--bg-body);
-      min-width: 0; // Prevent content overflow
+      padding: 2.5rem;
+      background: transparent;
+      min-width: 0;
+      position: relative;
     }
     @media (max-width: 768px) {
-      .content-area { padding: 1rem; }
+      .content-area { padding: 1.5rem; }
     }
   `]
 })

@@ -38,6 +38,18 @@ export const routes: Routes = [
       {
         path: 'late-payments',
         loadComponent: () => import('./features/admin/late-payments/late-payments.component').then(m => m.LatePaymentsComponent)
+      },
+      {
+        path: 'user-profile/:id',
+        loadComponent: () => import('./features/admin/user-profile-view/user-profile-view.component').then(m => m.UserProfileViewComponent)
+      },
+      {
+        path: 'profiles-list',
+        loadComponent: () => import('./features/admin/user-profiles-list/user-profiles-list.component').then(m => m.UserProfilesListComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/user/profile/profile.component').then(m => m.ProfileComponent)
       }
     ]
   },
@@ -53,6 +65,10 @@ export const routes: Routes = [
       {
         path: 'new-transaction',
         loadComponent: () => import('./features/user/new-transaction/new-transaction.component').then(m => m.NewTransactionComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/user/profile/profile.component').then(m => m.ProfileComponent)
       }
     ]
   },
