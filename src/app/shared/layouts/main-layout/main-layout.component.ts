@@ -13,6 +13,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
       <app-navbar></app-navbar>
       <div class="main-container">
         <app-sidebar></app-sidebar>
+        <div class="sidebar-overlay" (click)="closeSidebar()"></div>
         <main class="content-area">
           <router-outlet></router-outlet>
         </main>
@@ -36,9 +37,29 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
       min-width: 0;
       position: relative;
     }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 850;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
     @media (max-width: 768px) {
-      .content-area { padding: 1.5rem; }
+      .content-area { padding: 1.25rem; }
+      .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+      }
     }
   `]
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  closeSidebar() {
+    document.querySelector('.sidebar')?.classList.remove('active');
+    document.querySelector('.sidebar-overlay')?.classList.remove('active');
+  }
+}

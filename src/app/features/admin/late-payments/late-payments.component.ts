@@ -22,38 +22,71 @@ import { DataService } from '../../../core/services/data.service';
         </div>
       </div>
 
-      <div class="table-container animate-spring" *ngIf="lateUsers.length > 0; else empty">
-        <table>
-          <thead>
-            <tr>
-              <th>المشترك</th>
-              <th>نوع الحصة</th>
-              <th>المتبقي الحالي</th>
-              <th>الحد الأقصى المسموح</th>
-              <th>حالة الامتثال</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let user of lateUsers">
-              <td>
-                <div class="user-cell">
-                  <div class="user-avatar">{{ user.username.charAt(0) }}</div>
-                  <span class="username">{{ user.username }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                  {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
-                </span>
-              </td>
-              <td class="text-danger font-bold">{{ user.remaining }} جم</td>
-              <td class="text-accent font-bold">{{ user.expected }} جم</td>
-              <td>
-                <span class="badge-modern danger-glow animate-pulse">متأخر عن السداد</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div *ngIf="lateUsers.length > 0; else empty">
+        <!-- Desktop Table (Visible on large screens) -->
+        <div class="table-container animate-spring">
+          <table>
+            <thead>
+              <tr>
+                <th>المشترك</th>
+                <th>نوع الحصة</th>
+                <th>المتبقي الحالي</th>
+                <th>الحد الأقصى المسموح</th>
+                <th>حالة الامتثال</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of lateUsers">
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+                    <span class="username">{{ user.username }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                    {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                  </span>
+                </td>
+                <td class="text-danger font-bold">{{ user.remaining }} جم</td>
+                <td class="text-accent font-bold">{{ user.expected }} جم</td>
+                <td>
+                  <span class="badge-modern danger-glow animate-pulse">متأخر عن السداد</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Late List (Visible only on mobile) -->
+        <div class="mobile-late-list animate-spring">
+          <div class="late-card card glass-glow" *ngFor="let user of lateUsers">
+            <div class="card-header-late">
+              <div class="user-cell">
+                <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+                <span class="username">{{ user.username }}</span>
+              </div>
+              <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+              </span>
+            </div>
+            
+            <div class="card-body-late">
+              <div class="stat-item">
+                <span class="label">المتبقي الحالي:</span>
+                <span class="value text-danger font-bold">{{ user.remaining }} جم</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">الحد الأقصى المسموح:</span>
+                <span class="value text-accent font-bold">{{ user.expected }} جم</span>
+              </div>
+              <div class="stat-item full-width">
+                <span class="label">حالة الامتثال:</span>
+                <span class="badge-modern danger-glow animate-pulse text-center">🚨 متأخر عن جدول السداد</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <ng-template #empty>
@@ -92,6 +125,112 @@ import { DataService } from '../../../core/services/data.service';
 
     .text-accent { color: var(--accent); }
     .modern-empty { text-align: center; padding: 6rem 2rem; .empty-icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3; } }
+
+    .mobile-late-list {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .late-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      
+      .card-header-late {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.75rem;
+        
+        .user-cell {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          
+          .user-avatar {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 1px solid var(--glass-border);
+          }
+          .username {
+            font-weight: 800;
+            font-size: 1rem;
+          }
+        }
+      }
+
+      .card-body-late {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          
+          .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 800;
+          }
+          .value {
+            font-size: 0.95rem;
+          }
+          &.full-width {
+            grid-column: span 2;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 0.5rem;
+            margin-top: 0.25rem;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        display: none !important;
+      }
+      .mobile-late-list {
+        display: flex !important;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2.25rem;
+        .title { width: 100%; }
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .meta-glass {
+        width: 100%;
+        justify-content: center;
+        border-radius: 15px;
+        padding: 0.75rem;
+      }
+    }
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
   `]

@@ -13,37 +13,51 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="header">
           <div class="glow-orb"></div>
           <span class="label">القائمة الرئيسية</span>
+          <button class="close-btn-mobile" (click)="closeSidebar()">×</button>
         </div>
         <div class="menu-items">
           <ng-container *ngIf="authService.isAdmin(); else userMenu">
-            <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+            <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
                <span class="icon">🏠</span> <span class="label">الرئيسية</span>
             </a>
-            <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+            <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">👥</span> <span class="label">المستخدمين</span>
             </a>
-            <a routerLink="/admin/pending" routerLinkActive="active" class="nav-item">
+            <a routerLink="/admin/pending" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">💎</span> <span class="label">الطلبات</span>
             </a>
-            <a routerLink="/admin/transactions" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+            <a routerLink="/admin/transactions" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📦</span> <span class="label">المخزون</span>
             </a>
-            <a routerLink="/admin/profiles-list" routerLinkActive="active" class="nav-item">
+            <a routerLink="/admin/profiles-list" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📂</span> <span class="label">الأرشيف</span>
             </a>
           </ng-container>
 
           <ng-template #userMenu>
-            <a routerLink="/user" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+            <a routerLink="/user" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📊</span> <span class="label">محفظتي</span>
             </a>
-            <a routerLink="/user/new-transaction" routerLinkActive="active" class="nav-item">
+            <a routerLink="/user/new-transaction" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">⚡</span> <span class="label">طلب جديد</span>
             </a>
-            <a routerLink="/user/profile" routerLinkActive="active" class="nav-item">
+            <a routerLink="/user/profile" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">👤</span> <span class="label">الملف الشخصي</span>
             </a>
           </ng-template>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="user-profile-summary">
+            <div class="avatar-small">👤</div>
+            <div class="details-small">
+              <p class="username-small">{{ authService.currentUser()?.username }}</p>
+              <p class="role-tag-small">{{ authService.isAdmin() ? 'مدير النظام' : 'عضو مساهم' }}</p>
+            </div>
+          </div>
+          <button (click)="logout()" class="btn-logout-sidebar">
+             <span class="icon">🚪</span> <span class="label-logout">تسجيل الخروج</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -68,6 +82,17 @@ import { AuthService } from '../../../core/services/auth.service';
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(212, 175, 55, 0.25) transparent;
+      
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(212, 175, 55, 0.25);
+        border-radius: 10px;
+      }
     }
     .header {
       display: flex;
@@ -76,6 +101,28 @@ import { AuthService } from '../../../core/services/auth.service';
       margin-bottom: 3.5rem;
       padding: 0 1rem;
       .label { font-weight: 900; font-size: 1.2rem; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+      
+      .close-btn-mobile {
+        display: none;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--primary);
+        font-size: 1.5rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        margin-right: auto; /* RTL alignment */
+        transition: all 0.3s ease;
+        line-height: 1;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.12);
+          color: #fff;
+        }
+      }
     }
     .glow-orb { width: 14px; height: 14px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 20px var(--primary); }
     
@@ -108,6 +155,71 @@ import { AuthService } from '../../../core/services/auth.service';
         &:hover { transform: none; }
       }
     }
+
+    .sidebar-footer {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .user-profile-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.75rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      .avatar-small {
+        width: 36px;
+        height: 36px;
+        background: var(--primary);
+        color: #000;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+      }
+      .details-small {
+        display: flex;
+        flex-direction: column;
+        .username-small {
+          font-weight: 800;
+          font-size: 0.85rem;
+          color: #fff;
+        }
+        .role-tag-small {
+          font-weight: 700;
+          font-size: 0.7rem;
+          color: var(--primary);
+        }
+      }
+    }
+    .btn-logout-sidebar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 0.85rem;
+      border-radius: 16px;
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      color: #ff4d4d;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      .icon { font-size: 1.1rem; }
+      &:hover {
+        background: #dc2626;
+        color: #fff;
+        border-color: #dc2626;
+      }
+    }
     
     @media (max-width: 1024px) {
       .sidebar { width: 240px; }
@@ -116,16 +228,55 @@ import { AuthService } from '../../../core/services/auth.service';
     @media (max-width: 768px) {
       .sidebar { 
         position: fixed; 
-        right: -300px; 
+        right: -340px; 
         top: 0;
         height: 100vh;
-        padding: 1.5rem;
-        &.active { right: 0; width: 300px; } 
+        padding: 0.85rem;
+        width: 300px;
+        max-width: 85vw;
+        z-index: 1100;
+        box-sizing: border-box;
+        
+        &.active { 
+          right: 0; 
+        } 
       }
-      .sidebar-inner { border-radius: 0 40px 40px 0; }
+      .sidebar-inner { 
+        border-radius: 24px; 
+        box-sizing: border-box;
+        padding: 1.5rem 1rem;
+      }
+      .header {
+        margin-bottom: 1.5rem !important;
+        .close-btn-mobile {
+          display: flex !important;
+        }
+      }
+      .nav-item {
+        padding: 0.8rem 1rem !important;
+        border-radius: 16px !important;
+        gap: 1rem !important;
+        .icon { font-size: 1.4rem !important; }
+        .label { font-size: 0.95rem !important; }
+      }
+      .sidebar-footer { 
+        display: flex; 
+        padding-top: 1rem !important;
+        margin-top: 1.5rem !important;
+      }
     }
   `]
 })
 export class SidebarComponent {
   authService = inject(AuthService);
+
+  closeSidebar() {
+    document.querySelector('.sidebar')?.classList.remove('active');
+    document.querySelector('.sidebar-overlay')?.classList.remove('active');
+  }
+
+  logout() {
+    this.closeSidebar();
+    this.authService.logout();
+  }
 }

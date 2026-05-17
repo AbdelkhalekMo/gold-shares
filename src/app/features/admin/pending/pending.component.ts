@@ -24,41 +24,83 @@ import Swal from 'sweetalert2';
       </div>
 
       <ng-container *ngIf="!loading">
-        <div class="table-container animate-spring" *ngIf="pendingTxs.length > 0; else empty">
-          <table>
-            <thead>
-              <tr>
-                <th>المشترك</th>
-                <th>سعر اليوم</th>
-                <th>الوزن المطلوب</th>
-                <th>القيمة الإجمالية</th>
-                <th>وقت الطلب</th>
-                <th>القرار</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let tx of pendingTxs">
-                <td>
-                  <div class="user-cell">
-                    <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
+        <div *ngIf="pendingTxs.length > 0; else empty">
+          <!-- Desktop Table (Visible on large screens) -->
+          <div class="table-container animate-spring">
+            <table>
+              <thead>
+                <tr>
+                  <th>المشترك</th>
+                  <th>سعر اليوم</th>
+                  <th>الوزن المطلوب</th>
+                  <th>القيمة الإجمالية</th>
+                  <th>وقت الطلب</th>
+                  <th>القرار</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let tx of pendingTxs">
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
+                      <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                    </div>
+                  </td>
+                  <td>{{ tx.gram_price | number }} ج.م</td>
+                  <td class="text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</td>
+                  <td>{{ tx.amount | number }} ج.م</td>
+                  <td class="date-cell">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="actions">
+                    <button (click)="approve(tx)" class="decision-btn approve">
+                      <span class="icon">✓</span>
+                    </button>
+                    <button (click)="reject(tx)" class="decision-btn reject">
+                      <span class="icon">×</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Pending List (Visible only on mobile) -->
+          <div class="mobile-pending-list animate-spring">
+            <div class="pending-card card glass-glow" *ngFor="let tx of pendingTxs">
+              <div class="card-header-pending">
+                <div class="user-cell">
+                  <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
+                  <div class="user-meta">
                     <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                    <span class="date">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</span>
                   </div>
-                </td>
-                <td>{{ tx.gram_price | number }} ج.م</td>
-                <td class="text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</td>
-                <td>{{ tx.amount | number }} ج.م</td>
-                <td class="date-cell">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
-                <td class="actions">
-                  <button (click)="approve(tx)" class="decision-btn approve">
-                    <span class="icon">✓</span>
-                  </button>
-                  <button (click)="reject(tx)" class="decision-btn reject">
-                    <span class="icon">×</span>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+              </div>
+              
+              <div class="card-body-pending">
+                <div class="stat-item">
+                  <span class="label">سعر الجرام اليوم:</span>
+                  <span class="value">{{ tx.gram_price | number }} ج.م</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">الوزن المطلوب:</span>
+                  <span class="value text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</span>
+                </div>
+                <div class="stat-item full-width">
+                  <span class="label">القيمة الإجمالية:</span>
+                  <span class="value text-accent font-bold">{{ tx.amount | number }} ج.م</span>
+                </div>
+              </div>
+
+              <div class="card-actions-pending">
+                <button (click)="approve(tx)" class="btn-action-pending approve">
+                  <span>✓ موافقة وتثبيت</span>
+                </button>
+                <button (click)="reject(tx)" class="btn-action-pending reject">
+                  <span>× رفض وإلغاء</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <ng-template #empty>
@@ -94,6 +136,163 @@ import Swal from 'sweetalert2';
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .modern-empty { text-align: center; padding: 6rem 2rem; .empty-icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3; } }
+
+    .mobile-pending-list {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .pending-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      
+      .card-header-pending {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.75rem;
+        
+        .user-cell {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          
+          .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 1px solid var(--glass-border);
+          }
+          
+          .user-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            
+            .username {
+              font-weight: 800;
+              font-size: 1rem;
+              color: var(--text-main);
+            }
+            .date {
+              font-size: 0.8rem;
+              color: var(--text-muted);
+              font-family: 'Plus Jakarta Sans', sans-serif;
+            }
+          }
+        }
+      }
+
+      .card-body-pending {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          
+          .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 800;
+          }
+          .value {
+            font-size: 0.95rem;
+          }
+          &.full-width {
+            grid-column: span 2;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 0.5rem;
+            margin-top: 0.25rem;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          }
+        }
+      }
+
+      .card-actions-pending {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        
+        .btn-action-pending {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.85rem;
+          border-radius: 12px;
+          font-size: 0.9rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.03);
+          color: #fff;
+          
+          &.approve {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.15);
+            color: var(--accent);
+            &:hover {
+              background: rgba(16, 185, 129, 0.15);
+              border-color: var(--accent);
+              box-shadow: 0 5px 15px rgba(16, 185, 129, 0.1);
+            }
+          }
+          &.reject {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.15);
+            color: #ff4d4d;
+            &:hover {
+              background: rgba(239, 68, 68, 0.15);
+              border-color: #ef4444;
+              box-shadow: 0 5px 15px rgba(255, 77, 77, 0.1);
+            }
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        display: none !important;
+      }
+      .mobile-pending-list {
+        display: flex !important;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2.25rem;
+        .title { width: 100%; }
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .btn { width: 100%; justify-content: center; }
+    }
   `]
 })
 export class PendingComponent implements OnInit {

@@ -29,42 +29,86 @@ import Swal from 'sweetalert2';
       </div>
 
       <ng-container *ngIf="!loading">
-        <div class="table-container animate-spring" *ngIf="users.length > 0; else emptyUsers">
-          <table>
-            <thead>
-              <tr>
-                <th>العضو</th>
-                <th>التواصل</th>
-                <th>نوع الاشتراك</th>
-                <th>المطلوب</th>
-                <th>المسدد</th>
-                <th>الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let user of users">
-                <td>
-                  <div class="user-cell">
-                    <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+        <div *ngIf="users.length > 0; else emptyUsers">
+          <!-- Desktop Table (Visible on large screens) -->
+          <div class="table-container animate-spring">
+            <table>
+              <thead>
+                <tr>
+                  <th>العضو</th>
+                  <th>التواصل</th>
+                  <th>نوع الاشتراك</th>
+                  <th>المطلوب</th>
+                  <th>المسدد</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of users">
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+                      <span class="username">{{ user.username }}</span>
+                    </div>
+                  </td>
+                  <td class="email-cell">{{ user.email }}</td>
+                  <td>
+                    <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                      {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                    </span>
+                  </td>
+                  <td class="text-danger font-bold">{{ user.remaining }} جم</td>
+                  <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
+                  <td class="actions">
+                    <a [routerLink]="['/admin/transactions', user.id]" class="action-btn view" title="المعاملات">👁️</a>
+                    <a [routerLink]="['/admin/user-profile', user.id]" class="action-btn profile" title="البروفايل">👤</a>
+                    <button (click)="deleteUser(user)" class="action-btn delete" title="حذف">🗑️</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Card List (Visible only on mobile) -->
+          <div class="mobile-user-list animate-spring">
+            <div class="user-card card glass-glow" *ngFor="let user of users">
+              <div class="card-header-user">
+                <div class="user-cell">
+                  <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+                  <div class="user-meta">
                     <span class="username">{{ user.username }}</span>
+                    <span class="user-email">{{ user.email }}</span>
                   </div>
-                </td>
-                <td class="email-cell">{{ user.email }}</td>
-                <td>
-                  <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                    {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
-                  </span>
-                </td>
-                <td class="text-danger font-bold">{{ user.remaining }} جم</td>
-                <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
-                <td class="actions">
-                  <a [routerLink]="['/admin/transactions', user.id]" class="action-btn view" title="المعاملات">👁️</a>
-                  <a [routerLink]="['/admin/user-profile', user.id]" class="action-btn profile" title="البروفايل">👤</a>
-                  <button (click)="deleteUser(user)" class="action-btn delete" title="حذف">🗑️</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                  {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                </span>
+              </div>
+              
+              <div class="card-body-user">
+                <div class="stat-item">
+                  <span class="label">المسدد:</span>
+                  <span class="value text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">المطلوب:</span>
+                  <span class="value text-danger font-bold">{{ user.remaining }} جم</span>
+                </div>
+              </div>
+
+              <div class="card-actions-user">
+                <a [routerLink]="['/admin/transactions', user.id]" class="btn-action-mobile view">
+                  <span>👁️ المعاملات</span>
+                </a>
+                <a [routerLink]="['/admin/user-profile', user.id]" class="btn-action-mobile profile">
+                  <span>👤 الملف الشخصي</span>
+                </a>
+                <button (click)="deleteUser(user)" class="btn-action-mobile delete">
+                  <span>🗑️ حذف العضو</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <ng-template #emptyUsers>
@@ -75,54 +119,54 @@ import Swal from 'sweetalert2';
           </div>
         </ng-template>
       </ng-container>
+    </div>
 
-      <!-- Advanced Modern Modal -->
-      <div class="modal-wrapper" *ngIf="showModal" (click)="onOverlayClick($event)">
-        <div class="modal-glass animate-spring">
-          <div class="modal-header">
-            <h2 class="text-gradient">تسجيل عضو جديد</h2>
-            <button class="close-btn" (click)="showModal = false">×</button>
-          </div>
-          
-          <form (ngSubmit)="addUser()" class="modal-body">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>الاسم الكامل</label>
-                <div class="input-modern">
-                  <input type="text" [(ngModel)]="newUser.username" name="username" required placeholder="اسم المشترك">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>البريد الإلكتروني</label>
-                <div class="input-modern">
-                  <input type="email" [(ngModel)]="newUser.email" name="email" required dir="ltr" placeholder="mail@example.com">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>كلمة المرور المؤقتة</label>
-                <div class="input-modern">
-                  <input type="password" [(ngModel)]="newUser.password" name="password" required dir="ltr" placeholder="••••••••">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>نوع السهم الاستثماري</label>
-                <div class="input-modern">
-                  <select [(ngModel)]="newUser.share_type" name="share_type" required>
-                    <option value="full">سهم كامل (مقدم 3.5 جم - متبقي 28 جم)</option>
-                    <option value="half">نصف سهم (مقدم 1.5 جم - متبقي 14 جم)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button type="button" class="btn btn-glass" (click)="showModal = false">إلغاء</button>
-              <button type="submit" class="btn btn-primary" [disabled]="saving">
-                {{ saving ? 'جاري المعالجة...' : 'تأكيد التسجيل' }}
-              </button>
-            </div>
-          </form>
+    <!-- Advanced Modern Modal -->
+    <div class="modal-wrapper" *ngIf="showModal" (click)="onOverlayClick($event)">
+      <div class="modal-glass animate-spring">
+        <div class="modal-header">
+          <h2 class="text-gradient">تسجيل عضو جديد</h2>
+          <button class="close-btn" (click)="showModal = false">×</button>
         </div>
+        
+        <form (ngSubmit)="addUser()" class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>الاسم الكامل</label>
+              <div class="input-modern">
+                <input type="text" [(ngModel)]="newUser.username" name="username" required placeholder="اسم المشترك">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <div class="input-modern">
+                <input type="email" [(ngModel)]="newUser.email" name="email" required dir="ltr" placeholder="mail@example.com">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>كلمة المرور المؤقتة</label>
+              <div class="input-modern">
+                <input type="password" [(ngModel)]="newUser.password" name="password" required dir="ltr" placeholder="••••••••">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>نوع السهم الاستثماري</label>
+              <div class="input-modern select-wrapper">
+                <select [(ngModel)]="newUser.share_type" name="share_type" required>
+                  <option value="full">سهم كامل (مقدم 3.5 جم - متبقي 28 جم)</option>
+                  <option value="half">نصف سهم (مقدم 1.5 جم - متبقي 14 جم)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-glass" (click)="showModal = false">إلغاء</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'جاري المعالجة...' : 'تأكيد التسجيل' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   `,
@@ -154,20 +198,118 @@ import Swal from 'sweetalert2';
       &.delete:hover { border-color: #ff4d4d; color: #ff4d4d; }
     }
 
-    .modal-wrapper { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 1.5rem; }
+    .modal-wrapper { 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(2, 6, 23, 0.9); 
+      backdrop-filter: blur(16px); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 2000; 
+      padding: 2rem 1.5rem; 
+      overflow-y: auto;
+    }
     .modal-glass {
-      background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border); border-radius: 35px; width: 100%; max-width: 600px; overflow: hidden;
-      box-shadow: 0 0 50px rgba(212, 175, 55, 0.1);
+      margin: auto;
+      background: linear-gradient(135deg, #021a14 0%, #042f24 100%); 
+      border: 1px solid rgba(212, 175, 55, 0.25); 
+      border-radius: 32px; 
+      width: 100%; 
+      max-width: 620px; 
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 50px rgba(212, 175, 55, 0.2);
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle at 50% -20%, rgba(212, 175, 55, 0.15), transparent 70%);
+        pointer-events: none;
+      }
     }
-    .modal-header { padding: 2rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;
-      h2 { font-size: 1.75rem; font-weight: 900; }
-      .close-btn { background: none; border: none; color: var(--text-muted); font-size: 2rem; cursor: pointer; }
+    .modal-header { padding: 2rem 2.5rem; border-bottom: 1px solid rgba(212, 175, 55, 0.1); display: flex; justify-content: space-between; align-items: center; position: relative;
+      h2 { font-size: 1.8rem; font-weight: 900; font-family: 'Amiri', serif; color: var(--primary); text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+      .close-btn { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 12px; color: var(--primary); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease;
+        &:hover { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+      }
     }
-    .modal-body { padding: 2rem; }
+    .modal-body { padding: 2rem 2.5rem; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .input-modern { 
-      input, select { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1rem; color: #fff;
-        &:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.08); outline: none; }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      label {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-right: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        &::before {
+          content: '✦';
+          font-size: 0.75rem;
+          color: var(--primary);
+          opacity: 0.8;
+        }
+      }
+    }
+
+    .input-modern {
+      position: relative;
+      width: 100%;
+      
+      input, select {
+        width: 100%;
+        background: rgba(4, 47, 36, 0.25); 
+        border: 1px solid rgba(212, 175, 55, 0.15); 
+        border-radius: 16px;
+        padding: 0.95rem 1.25rem;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        box-sizing: border-box;
+        
+        &:focus {
+          border-color: var(--primary);
+          background: rgba(4, 47, 36, 0.45); 
+          box-shadow: 0 0 15px rgba(212, 175, 55, 0.25); 
+          outline: none;
+        }
+      }
+      
+      select {
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        padding-left: 2.5rem;
+        
+        option {
+          background: #042f24; 
+          color: #fff;
+          padding: 1rem;
+        }
+      }
+      
+      &.select-wrapper::after {
+        content: '▼';
+        font-size: 0.65rem;
+        color: var(--primary);
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        transition: transform 0.3s ease;
+      }
+      &:focus-within.select-wrapper::after {
+        transform: translateY(-50%) rotate(180deg);
       }
     }
     .modal-footer { margin-top: 2.5rem; display: flex; justify-content: flex-end; gap: 1.5rem; }
@@ -177,7 +319,178 @@ import Swal from 'sweetalert2';
 
     .modern-empty { text-align: center; padding: 5rem; .icon { font-size: 4rem; opacity: 0.3; margin-bottom: 1rem; } }
 
-    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .mobile-user-list {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .user-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      
+      .card-header-user {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 1rem;
+        
+        .user-cell {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          
+          .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--primary);
+            color: #000;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+          }
+          
+          .user-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            
+            .username {
+              font-weight: 800;
+              font-size: 1rem;
+              color: var(--text-main);
+            }
+            .user-email {
+              font-size: 0.8rem;
+              color: var(--text-muted);
+              font-family: 'Plus Jakarta Sans', sans-serif;
+            }
+          }
+        }
+      }
+
+      .card-body-user {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          
+          .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 800;
+          }
+          .value {
+            font-size: 1rem;
+          }
+        }
+      }
+
+      .card-actions-user {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        
+        .btn-action-mobile {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.75rem;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          font-weight: 800;
+          text-decoration: none;
+          color: #fff;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          transition: all 0.3s ease;
+          cursor: pointer;
+          
+          &:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(212, 175, 55, 0.05);
+          }
+          
+          &.delete {
+            grid-column: span 2;
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.1);
+            color: #ff4d4d;
+            
+            &:hover {
+              background: rgba(239, 68, 68, 0.15);
+              border-color: #ef4444;
+            }
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        display: none !important;
+      }
+      .mobile-user-list {
+        display: flex !important;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2.25rem;
+        .title { width: 100%; }
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .actions-header {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+        button { width: 100%; justify-content: center; }
+      }
+      .modal-glass {
+        border-radius: 28px !important;
+        max-width: 95vw !important;
+      }
+      .modal-header {
+        padding: 1.5rem 1.75rem !important;
+        h2 { font-size: 1.5rem !important; }
+      }
+      .modal-body {
+        padding: 1.5rem 1.75rem !important;
+      }
+      .modal-footer {
+        flex-direction: column-reverse !important;
+        gap: 0.75rem !important;
+        margin-top: 1.75rem !important;
+        button { width: 100% !important; padding: 0.95rem !important; border-radius: 12px !important; justify-content: center !important; }
+      }
+      .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+      }
+    }
   `]
 })
 export class UsersComponent implements OnInit {

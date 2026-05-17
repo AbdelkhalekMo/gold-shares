@@ -74,6 +74,7 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .login-glass-card {
+      box-sizing: border-box;
       width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--glass-border); border-radius: 40px; padding: 3.5rem;
       backdrop-filter: blur(30px); position: relative; z-index: 10;
@@ -111,6 +112,7 @@ import { AuthService } from '../../../core/services/auth.service';
       position: relative;
       .icon { position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 1.3rem; opacity: 0.7; }
       input {
+        box-sizing: border-box;
         width: 100%; padding: 1.25rem 1.25rem 1.25rem 3.75rem; background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--glass-border); border-radius: 20px; color: #fff; font-size: 1.1rem; transition: all 0.3s ease;
         &:focus { outline: none; border-color: var(--primary); background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 25px rgba(212, 175, 55, 0.15); }
@@ -118,6 +120,7 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .login-btn { 
+      box-sizing: border-box;
       width: 100%; padding: 1.4rem; border-radius: 20px; font-size: 1.2rem; font-weight: 900; margin-top: 1.5rem;
       background: linear-gradient(135deg, var(--primary), #b8860b);
       color: #000;
@@ -130,8 +133,89 @@ import { AuthService } from '../../../core/services/auth.service';
       span { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; opacity: 0.5; }
     }
 
+    @media (max-width: 768px) {
+      .login-page {
+        padding: 1rem;
+      }
+      .login-glass-card {
+        padding: 2.25rem 1.5rem;
+        border-radius: 28px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      }
+      .header {
+        margin-bottom: 2rem;
+        .logo-container {
+          width: 90px;
+          height: 90px;
+          border-radius: 24px;
+          margin-bottom: 1rem;
+          .login-logo { padding: 6px; }
+        }
+        h1 { font-size: 1.8rem !important; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .login-form {
+        gap: 1.25rem;
+      }
+      .form-group label {
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+      }
+      .input-modern {
+        .icon { left: 1rem; font-size: 1.15rem; }
+        input {
+          padding: 1.1rem 1.1rem 1.1rem 3.25rem;
+          font-size: 1rem;
+          border-radius: 16px;
+        }
+      }
+      .login-btn {
+        padding: 1.1rem;
+        font-size: 1.1rem;
+        border-radius: 16px;
+        margin-top: 0.75rem;
+      }
+      .footer-text {
+        margin-top: 1.75rem;
+        p { font-size: 1.5rem; }
+      }
+    }
+
     @media (max-width: 480px) {
-      .login-glass-card { padding: 2.5rem 1.5rem; }
+      .login-glass-card {
+        padding: 1.75rem 1.15rem;
+        border-radius: 20px;
+      }
+      .header {
+        margin-bottom: 1.5rem;
+        .logo-container {
+          width: 80px;
+          height: 80px;
+          border-radius: 18px;
+          margin-bottom: 0.75rem;
+          .login-logo { padding: 5px; }
+        }
+        h1 { font-size: 1.5rem !important; }
+        .subtitle { font-size: 0.85rem; }
+      }
+      .input-modern {
+        .icon { left: 0.85rem; font-size: 1rem; }
+        input {
+          padding: 0.95rem 0.95rem 0.95rem 2.75rem;
+          font-size: 0.95rem;
+          border-radius: 12px;
+        }
+      }
+      .login-btn {
+        padding: 0.95rem;
+        font-size: 1rem;
+        border-radius: 12px;
+        margin-top: 0.5rem;
+      }
+      .footer-text {
+        margin-top: 1.25rem;
+        p { font-size: 1.25rem; margin-bottom: 0.25rem; }
+      }
     }
   `]
 })

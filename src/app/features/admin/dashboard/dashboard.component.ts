@@ -58,21 +58,6 @@ import { Stats } from '../../../core/interfaces/models.interface';
           </div>
         </div>
       </div>
-
-      <!-- Admin Quick Insights -->
-      <div class="insights-row">
-        <div class="card glass-card welcome-card">
-          <div class="orb"></div>
-          <div class="content">
-            <h2>مرحباً بك يا مدير النظام</h2>
-            <p>النظام الآن يعمل بكفاءة 100%. جميع العمليات تحت المراقبة.</p>
-            <div class="actions">
-              <button class="btn btn-primary">تقارير اليوم</button>
-              <button class="btn btn-glass">السجلات</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   `,
   styles: [`
@@ -96,12 +81,40 @@ import { Stats } from '../../../core/interfaces/models.interface';
       &.highlight { border: 2px solid var(--primary); }
     }
 
-    .welcome-card {
-      padding: 4rem; position: relative; overflow: hidden;
-      .orb { position: absolute; width: 300px; height: 300px; background: var(--primary); filter: blur(150px); opacity: 0.1; top: -150px; left: -150px; }
-      h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; font-family: 'Amiri', serif; }
-      p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2.5rem; max-width: 600px; }
-      .actions { display: flex; gap: 1.5rem; }
+    @media (max-width: 768px) {
+      .page-header {
+        margin-bottom: 2rem;
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .stat-box {
+        min-height: 160px;
+        padding: 1.25rem;
+        .main {
+          margin-top: 1.5rem;
+          h3 { font-size: 2rem; }
+        }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-header {
+        margin-bottom: 1.5rem;
+        .islamic-header { font-size: 1.6rem !important; }
+        .subtitle { font-size: 0.85rem; }
+      }
+      .stat-box {
+        min-height: 140px;
+        padding: 1rem;
+        .header {
+          .icon { font-size: 1.6rem; }
+        }
+        .main {
+          margin-top: 1rem;
+          h3 { font-size: 1.6rem; }
+          p { font-size: 0.8rem; }
+        }
+      }
     }
   `]
 })

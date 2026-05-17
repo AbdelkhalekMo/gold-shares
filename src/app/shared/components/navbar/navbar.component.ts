@@ -106,13 +106,78 @@ import { AuthService } from '../../../core/services/auth.service';
     .menu-toggle {
       display: none;
       flex-direction: column;
+      justify-content: center;
+      align-items: center;
       gap: 5px;
-      background: none; border: none; cursor: pointer;
-      span { width: 25px; height: 2px; background: var(--primary); border-radius: 2px; }
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      span {
+        width: 20px;
+        height: 2px;
+        background: var(--primary);
+        border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(212, 175, 55, 0.3);
+        transform: scale(1.05);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
     }
+    
     @media (max-width: 768px) {
+      .navbar {
+        height: 80px;
+        padding: 0 1rem;
+      }
+      .glass-nav {
+        height: 60px;
+        padding: 0 1.25rem;
+        border-radius: 18px;
+      }
+      .logo {
+        gap: 0.75rem;
+        .logo-img {
+          height: 38px;
+        }
+        .logo-text {
+          font-size: 1.35rem;
+        }
+      }
       .user-actions { display: none; }
       .menu-toggle { display: flex; }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        height: 72px;
+        padding: 0 0.75rem;
+      }
+      .glass-nav {
+        height: 56px;
+        padding: 0 0.85rem;
+        border-radius: 16px;
+      }
+      .logo {
+        gap: 0.5rem;
+        .logo-img {
+          height: 32px;
+        }
+        .logo-text {
+          font-size: 1.15rem;
+        }
+      }
     }
   `]
 })
@@ -121,5 +186,6 @@ export class NavbarComponent {
 
   toggleSidebar() {
     document.querySelector('.sidebar')?.classList.toggle('active');
+    document.querySelector('.sidebar-overlay')?.classList.toggle('active');
   }
 }

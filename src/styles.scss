@@ -29,13 +29,17 @@
   font-family: 'Tajawal', sans-serif;
 }
 
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--bg-body);
   background-image: var(--mesh-gradient), var(--islamic-pattern);
   background-attachment: fixed;
   color: var(--text-main);
   direction: rtl;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -68,6 +72,15 @@ body {
     box-shadow: 0 15px 45px rgba(212, 175, 55, 0.15);
     &::after { left: 100%; }
   }
+
+  @media (max-width: 768px) {
+    padding: 1.25rem !important;
+    border-radius: 20px;
+    &:hover {
+      transform: none !important;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    }
+  }
 }
 
 // Bento Grid Layout
@@ -76,6 +89,12 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 // Modern Buttons
@@ -109,6 +128,14 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover { background: rgba(255, 255, 255, 0.2); }
   }
+
+  @media (max-width: 768px) {
+    padding: 0.85rem 1.75rem;
+    font-size: 0.95rem;
+    border-radius: 14px;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 // Global Modern Select & Input Styling
@@ -131,6 +158,12 @@ input, select, textarea {
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
   }
 }
 
@@ -156,13 +189,27 @@ select {
   border-radius: 30px;
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(10px);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.3);
+    border-radius: 10px;
+    &:hover { background: rgba(212, 175, 55, 0.6); }
+  }
 
   table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 8px;
     padding: 1rem;
+    min-width: 600px; /* Ensures table headers don't squish too much on mobile */
 
     th {
       background: transparent;
@@ -186,6 +233,22 @@ select {
       &:hover td {
         background: rgba(212, 175, 55, 0.08);
         color: var(--primary);
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    border-radius: 20px;
+    table {
+      padding: 0.5rem;
+      border-spacing: 0 6px;
+      th {
+        padding: 1rem 0.75rem;
+        font-size: 0.8rem;
+      }
+      tr td {
+        padding: 1rem 0.75rem;
+        font-size: 0.85rem;
       }
     }
   }

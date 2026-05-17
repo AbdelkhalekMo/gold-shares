@@ -22,42 +22,84 @@ import { DataService } from '../../../core/services/data.service';
       </div>
 
       <div *ngIf="!loading()">
-        <div class="table-container animate-spring" *ngIf="profiles().length > 0; else empty">
-          <table>
-            <thead>
-              <tr>
-                <th>المشترك</th>
-                <th>التخصص المهني</th>
-                <th>محل الإقامة</th>
-                <th>صافي الدخل</th>
-                <th>الالتزام</th>
-                <th>تاريخ التسجيل</th>
-                <th>التفاصيل</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of profiles()">
-                <td>
-                  <div class="user-cell">
-                    <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
+        <div *ngIf="profiles().length > 0; else empty">
+          <!-- Desktop Table (Visible on large screens) -->
+          <div class="table-container animate-spring">
+            <table>
+              <thead>
+                <tr>
+                  <th>المشترك</th>
+                  <th>التخصص المهني</th>
+                  <th>محل الإقامة</th>
+                  <th>صافي الدخل</th>
+                  <th>الالتزام</th>
+                  <th>تاريخ التسجيل</th>
+                  <th>التفاصيل</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of profiles()">
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
+                      <span class="username">{{ p.full_name }}</span>
+                    </div>
+                  </td>
+                  <td class="job-cell">{{ p.job || '---' }}</td>
+                  <td>{{ p.address }}</td>
+                  <td class="text-accent font-bold">{{ p.avg_net_income | number }} <small>ج.م</small></td>
+                  <td>
+                    <span class="badge-modern" [ngClass]="p.can_commit_monthly === 'نعم' ? 'emerald' : 'danger'">
+                      {{ p.can_commit_monthly }}
+                    </span>
+                  </td>
+                  <td class="date-cell">{{ p.created_at | date:'yyyy-MM-dd' }}</td>
+                  <td class="actions">
+                    <a [routerLink]="['/admin/user-profile', p.id]" class="action-btn view" title="عرض الملف">👤</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Profile List (Visible only on mobile) -->
+          <div class="mobile-profile-list animate-spring">
+            <div class="profile-card card glass-glow" *ngFor="let p of profiles()">
+              <div class="card-header-profile">
+                <div class="user-cell">
+                  <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
+                  <div class="user-meta">
                     <span class="username">{{ p.full_name }}</span>
+                    <span class="date">{{ p.created_at | date:'yyyy-MM-dd' }}</span>
                   </div>
-                </td>
-                <td class="job-cell">{{ p.job || '---' }}</td>
-                <td>{{ p.address }}</td>
-                <td class="text-accent font-bold">{{ p.avg_net_income | number }} <small>ج.م</small></td>
-                <td>
-                  <span class="badge-modern" [ngClass]="p.can_commit_monthly === 'نعم' ? 'emerald' : 'danger'">
-                    {{ p.can_commit_monthly }}
-                  </span>
-                </td>
-                <td class="date-cell">{{ p.created_at | date:'yyyy-MM-dd' }}</td>
-                <td class="actions">
-                  <a [routerLink]="['/admin/user-profile', p.id]" class="action-btn view" title="عرض الملف">👤</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+                <span class="badge-modern" [ngClass]="p.can_commit_monthly === 'نعم' ? 'emerald' : 'danger'">
+                  الالتزام: {{ p.can_commit_monthly }}
+                </span>
+              </div>
+              
+              <div class="card-body-profile">
+                <div class="stat-item">
+                  <span class="label">التخصص المهني:</span>
+                  <span class="value job">{{ p.job || '---' }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">صافي الدخل:</span>
+                  <span class="value text-accent font-bold">{{ p.avg_net_income | number }} <small>ج.م</small></span>
+                </div>
+                <div class="stat-item full-width">
+                  <span class="label">محل الإقامة:</span>
+                  <span class="value">{{ p.address }}</span>
+                </div>
+              </div>
+
+              <div class="card-actions-profile">
+                <a [routerLink]="['/admin/user-profile', p.id]" class="btn-action-profile">
+                  <span>👤 عرض الملف الشخصي الكامل</span>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
         <ng-template #empty>
@@ -101,6 +143,146 @@ import { DataService } from '../../../core/services/data.service';
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .modern-empty { text-align: center; padding: 6rem 2rem; .empty-icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3; } }
+
+    .mobile-profile-list {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .profile-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      
+      .card-header-profile {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.75rem;
+        
+        .user-cell {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          
+          .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 1px solid var(--glass-border);
+          }
+          
+          .user-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            
+            .username {
+              font-weight: 800;
+              font-size: 1rem;
+              color: var(--text-main);
+            }
+            .date {
+              font-size: 0.8rem;
+              color: var(--text-muted);
+              font-family: 'Plus Jakarta Sans', sans-serif;
+            }
+          }
+        }
+      }
+
+      .card-body-profile {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          
+          .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 800;
+          }
+          .value {
+            font-size: 0.95rem;
+            &.job {
+              color: var(--text-muted);
+            }
+          }
+          &.full-width {
+            grid-column: span 2;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 0.5rem;
+            margin-top: 0.25rem;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          }
+        }
+      }
+
+      .card-actions-profile {
+        .btn-action-profile {
+          box-sizing: border-box;
+          width: 100%;
+          padding: 0.85rem;
+          border-radius: 12px;
+          font-size: 0.9rem;
+          font-weight: 800;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #fff;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          text-decoration: none;
+          
+          &:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(212, 175, 55, 0.05);
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        display: none !important;
+      }
+      .mobile-profile-list {
+        display: flex !important;
+      }
+      .page-header {
+        margin-bottom: 2.25rem;
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+    }
   `]
 })
 export class UserProfilesListComponent implements OnInit {

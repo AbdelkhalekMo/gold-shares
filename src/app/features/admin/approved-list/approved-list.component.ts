@@ -122,6 +122,26 @@ import { DataService } from '../../../core/services/data.service';
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .modern-empty { text-align: center; padding: 5rem; .icon { font-size: 4rem; opacity: 0.2; margin-bottom: 1rem; } }
+
+    @media (max-width: 768px) {
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2.25rem;
+        .title { width: 100%; }
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .btn { width: 100%; justify-content: center; }
+      .users-bento-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .user-glass-card {
+        padding: 1.25rem;
+      }
+    }
   `]
 })
 export class ApprovedListComponent implements OnInit {
