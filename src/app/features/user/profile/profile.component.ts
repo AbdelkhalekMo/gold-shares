@@ -204,6 +204,27 @@ import Swal from 'sweetalert2';
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 1024px) { .form-sections-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .page-header {
+        margin-bottom: 2rem;
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .status-banner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.5rem 1.25rem;
+        gap: 1rem;
+        .icon-wrap { font-size: 2rem; }
+        h3 { font-size: 1.1rem; }
+        p { font-size: 0.85rem; }
+      }
+      .form-footer {
+        margin-top: 2rem;
+        button { width: 100%; justify-content: center; }
+      }
+    }
     @media (max-width: 640px) { .grid-form { grid-template-columns: 1fr; .full { grid-column: span 1; } } }
   `]
 })

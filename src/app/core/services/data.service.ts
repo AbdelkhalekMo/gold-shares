@@ -153,20 +153,24 @@ export class DataService {
 
   // --- Dashboard Stats ---
   async getAdminStats(): Promise<Stats> {
+    // Count of actual member users (role = 'user')
     const { count: userCount } = await this.supabaseSvc.client
       .from('users')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'user');
 
+    // Count of approved transactions
     const { count: txCount } = await this.supabaseSvc.client
       .from('approved_transactions')
       .select('*', { count: 'exact', head: true });
 
-    const { data: totals } = await this.supabaseSvc.client
-      .from('users')
-      .select('totalAmount, paid');
+    // Sum of amount and grams directly from approved_transactions
+    const { data: txData } = await this.supabaseSvc.client
+      .from('approved_transactions')
+      .select('amount, grams');
 
-    const totalMoney = totals?.reduce((sum, u) => sum + Number(u.totalAmount), 0) || 0;
-    const totalGrams = totals?.reduce((sum, u) => sum + Number(u.paid), 0) || 0;
+    const totalMoney = txData?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0;
+    const totalGrams = txData?.reduce((sum, tx) => sum + Number(tx.grams || 0), 0) || 0;
 
     return {
       totalUsers: userCount || 0,

@@ -23,48 +23,91 @@ import Swal from 'sweetalert2';
       </div>
 
       <ng-container *ngIf="!loading">
-        <div class="table-container animate-spring" *ngIf="users.length > 0; else emptyState">
-          <table>
-            <thead>
-              <tr>
-                <th>المشترك</th>
-                <th>نوع الحصة</th>
-                <th>إجمالي المسدد</th>
-                <th>الرصيد المتبقي</th>
-                <th>حالة الاستلام</th>
-                <th>إجراء</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let user of users">
-                <td>
-                  <div class="user-cell">
-                    <div class="user-avatar">{{ user.username.charAt(0) }}</div>
-                    <span class="username">{{ user.username }}</span>
-                  </div>
-                </td>
-                <td>
-                  <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                    {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
-                  </span>
-                </td>
-                <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
-                <td class="text-danger font-bold">{{ user.remaining }} جم</td>
-                <td>
+        <div *ngIf="users.length > 0; else emptyState">
+          <!-- Desktop Table (Visible on large screens) -->
+          <div class="table-container animate-spring">
+            <table>
+              <thead>
+                <tr>
+                  <th>المشترك</th>
+                  <th>نوع الحصة</th>
+                  <th>إجمالي المسدد</th>
+                  <th>الرصيد المتبقي</th>
+                  <th>حالة الاستلام</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of users">
+                  <td>
+                    <div class="user-cell">
+                      <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+                      <span class="username">{{ user.username }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                      {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                    </span>
+                  </td>
+                  <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
+                  <td class="text-danger font-bold">{{ user.remaining }} جم</td>
+                  <td>
+                    <div class="status-wrap" [ngClass]="user.isReceived ? 'received' : 'pending'">
+                      <span class="dot"></span>
+                      {{ user.isReceived ? 'تم الاستلام' : 'بانتظار التسليم' }}
+                    </div>
+                  </td>
+                  <td>
+                    <button *ngIf="!user.isReceived" (click)="markAsReceived(user)" class="btn btn-primary btn-mini">
+                      📦 تأكيد الاستلام
+                    </button>
+                    <span *ngIf="user.isReceived" class="text-done">✨ اكتملت العملية</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Deliveries List (Visible only on mobile) -->
+          <div class="mobile-deliveries-list animate-spring">
+            <div class="delivery-card card glass-glow" *ngFor="let user of users">
+              <div class="card-header-delivery">
+                <div class="user-cell">
+                  <div class="user-avatar">{{ user.username.charAt(0) }}</div>
+                  <span class="username">{{ user.username }}</span>
+                </div>
+                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                  {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                </span>
+              </div>
+              
+              <div class="card-body-delivery">
+                <div class="stat-item">
+                  <span class="label">إجمالي المسدد:</span>
+                  <span class="value text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">الرصيد المتبقي:</span>
+                  <span class="value text-danger font-bold">{{ user.remaining }} جم</span>
+                </div>
+                <div class="stat-item full-width">
+                  <span class="label">حالة الاستلام:</span>
                   <div class="status-wrap" [ngClass]="user.isReceived ? 'received' : 'pending'">
                     <span class="dot"></span>
                     {{ user.isReceived ? 'تم الاستلام' : 'بانتظار التسليم' }}
                   </div>
-                </td>
-                <td>
-                  <button *ngIf="!user.isReceived" (click)="markAsReceived(user)" class="btn btn-primary btn-mini">
-                    📦 تأكيد الاستلام
-                  </button>
-                  <span *ngIf="user.isReceived" class="text-done">✨ اكتملت العملية</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+              </div>
+
+              <div class="card-actions-delivery">
+                <button *ngIf="!user.isReceived" (click)="markAsReceived(user)" class="btn-action-delivery btn-primary">
+                  📦 تأكيد التسليم وتوثيق الحالة
+                </button>
+                <span *ngIf="user.isReceived" class="text-done">✨ اكتملت عملية الاستلام بنجاح</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <ng-template #emptyState>
@@ -108,6 +151,147 @@ import Swal from 'sweetalert2';
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .modern-empty { text-align: center; padding: 6rem 2rem; .icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3; } }
+
+    .mobile-deliveries-list {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .delivery-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      
+      .card-header-delivery {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.75rem;
+        
+        .user-cell {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          
+          .user-avatar {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 1px solid var(--glass-border);
+          }
+          .username {
+            font-weight: 800;
+            font-size: 1rem;
+          }
+        }
+      }
+
+      .card-body-delivery {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          
+          .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 800;
+          }
+          .value {
+            font-size: 0.95rem;
+          }
+          &.full-width {
+            grid-column: span 2;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 0.5rem;
+            margin-top: 0.25rem;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          }
+        }
+      }
+
+      .card-actions-delivery {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+        .btn-action-delivery {
+          width: 100%;
+          padding: 0.85rem;
+          border-radius: 12px;
+          font-size: 0.9rem;
+          font-weight: 800;
+          background: linear-gradient(135deg, var(--primary), #b8860b);
+          color: #000;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          
+          &:hover {
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+            transform: translateY(-2px);
+          }
+        }
+        .text-done {
+          width: 100%;
+          text-align: center;
+          padding: 0.75rem;
+          background: rgba(16, 185, 129, 0.05);
+          border: 1px solid rgba(16, 185, 129, 0.15);
+          border-radius: 12px;
+          color: var(--accent);
+          font-weight: 800;
+          font-size: 0.9rem;
+          text-shadow: none;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        display: none !important;
+      }
+      .mobile-deliveries-list {
+        display: flex !important;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2.25rem;
+        .title { width: 100%; }
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .btn { width: 100%; justify-content: center; }
+    }
   `]
 })
 export class DeliveriesComponent implements OnInit {

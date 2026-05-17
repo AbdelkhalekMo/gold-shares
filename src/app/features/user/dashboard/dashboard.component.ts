@@ -156,6 +156,43 @@ import { AuthService } from '../../../core/services/auth.service';
       h3 { font-size: 1.75rem; margin-bottom: 1rem; }
       p { color: var(--text-muted); margin-bottom: 2rem; }
     }
+
+    @media (max-width: 768px) {
+      .page-header {
+        margin-bottom: 2rem;
+        .islamic-header { font-size: 1.8rem; }
+        .subtitle { font-size: 0.95rem; }
+      }
+      .stat-card {
+        padding: 1.5rem 1.25rem !important;
+        gap: 1rem;
+        .card-icon { font-size: 2.25rem; }
+        .value { font-size: 1.6rem; }
+      }
+      .delivery-card {
+        margin-bottom: 2rem;
+        .glass-inner {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 1.5rem;
+          padding: 3rem 1.5rem 2rem;
+        }
+        .icon-wrap { font-size: 3rem; }
+        h3 { font-size: 1.5rem; }
+        p { font-size: 0.95rem; }
+        .badge-modern {
+          position: static;
+          margin-top: 1rem;
+          display: inline-block;
+        }
+      }
+      .section-header {
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        .section-title { font-size: 1.25rem; }
+      }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
