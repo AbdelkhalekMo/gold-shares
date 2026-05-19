@@ -15,7 +15,7 @@ import Swal from 'sweetalert2';
       <div class="page-header">
         <div class="title">
           <h1 class="islamic-header text-gradient">إدارة المشتركين</h1>
-          <p class="subtitle">التحكم الكامل في سجلات الأعضاء وحصص الذهب</p>
+          <p class="subtitle">التحكم الكامل في سجلات الأعضاء، المشرفين، وحصص الذهب الاستثمارية</p>
         </div>
         <div class="actions-header">
           <button class="btn btn-glass" (click)="loadUsers()">🔄 تحديث</button>
@@ -25,7 +25,7 @@ import Swal from 'sweetalert2';
 
       <div *ngIf="loading" class="modern-loading">
         <div class="loader-orb"></div>
-        <p>جاري استرجاع قائمة الأعضاء...</p>
+        <p>جاري استرجاع قائمة الأعضاء والمشرفين...</p>
       </div>
 
       <ng-container *ngIf="!loading">
@@ -35,9 +35,9 @@ import Swal from 'sweetalert2';
             <table>
               <thead>
                 <tr>
-                  <th>العضو</th>
+                  <th>العضو المشترك</th>
                   <th>التواصل</th>
-                  <th>نوع الاشتراك</th>
+                  <th>نوع الاشتراك الرتبة</th>
                   <th>المطلوب</th>
                   <th>المسدد</th>
                   <th>الإجراءات</th>
@@ -53,16 +53,24 @@ import Swal from 'sweetalert2';
                   </td>
                   <td class="email-cell">{{ user.email }}</td>
                   <td>
-                    <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                      {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
+                        {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                      </span>
+                      <span *ngIf="user.role === 'supervisor'" class="badge-modern supervisor-badge" title="مشرف ذو صلاحيات مراقبة محدودة">مشرف مراقب</span>
+                    </div>
                   </td>
                   <td class="text-danger font-bold">{{ user.remaining }} جم</td>
                   <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
                   <td class="actions">
-                    <a [routerLink]="['/admin/transactions', user.id]" class="action-btn view" title="المعاملات">👁️</a>
-                    <a [routerLink]="['/admin/user-profile', user.id]" class="action-btn profile" title="البروفايل">👤</a>
-                    <button (click)="deleteUser(user)" class="action-btn delete" title="حذف">🗑️</button>
+                    <a [routerLink]="['/admin/transactions', user.id]" class="action-btn view" title="سجل المعاملات الحسابية">👁️</a>
+                    
+                    <!-- Promote / Demote Role toggle button -->
+                    <button (click)="toggleRole(user)" class="action-btn role-toggle" [class.is-supervisor]="user.role === 'supervisor'" [title]="user.role === 'supervisor' ? 'تنزيل لرتبة عضو مساهم' : 'ترقية لرتبة مشرف مراقب'">
+                      {{ user.role === 'supervisor' ? '👤' : '🔑' }}
+                    </button>
+                    
+                    <button (click)="deleteUser(user)" class="action-btn delete" title="حذف العضو بالكامل">🗑️</button>
                   </td>
                 </tr>
               </tbody>
@@ -76,7 +84,10 @@ import Swal from 'sweetalert2';
                 <div class="user-cell">
                   <div class="user-avatar">{{ user.username.charAt(0) }}</div>
                   <div class="user-meta">
-                    <span class="username">{{ user.username }}</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                      <span class="username">{{ user.username }}</span>
+                      <span *ngIf="user.role === 'supervisor'" class="badge-modern supervisor-badge mobile-badge">مشرف</span>
+                    </div>
                     <span class="user-email">{{ user.email }}</span>
                   </div>
                 </div>
@@ -100,9 +111,11 @@ import Swal from 'sweetalert2';
                 <a [routerLink]="['/admin/transactions', user.id]" class="btn-action-mobile view">
                   <span>👁️ المعاملات</span>
                 </a>
-                <a [routerLink]="['/admin/user-profile', user.id]" class="btn-action-mobile profile">
-                  <span>👤 الملف الشخصي</span>
-                </a>
+                
+                <button (click)="toggleRole(user)" class="btn-action-mobile promote">
+                  <span>{{ user.role === 'supervisor' ? '👤 تنزيل لعضو' : '🔑 ترقية لمشرف' }}</span>
+                </button>
+                
                 <button (click)="deleteUser(user)" class="btn-action-mobile delete">
                   <span>🗑️ حذف العضو</span>
                 </button>
@@ -114,14 +127,14 @@ import Swal from 'sweetalert2';
         <ng-template #emptyUsers>
           <div class="modern-empty card">
             <div class="icon">👥</div>
-            <h3>لا توجد سجلات حالياً</h3>
-            <p>ابدأ ببناء مجتمعك بإضافة أول عضو للمنظومة.</p>
+            <h3>لا توجد حسابات مسجلة</h3>
+            <p>لم يتم العثور على أي أعضاء مساهمين أو مشرفين في النظام حالياً.</p>
           </div>
         </ng-template>
       </ng-container>
     </div>
 
-    <!-- Advanced Modern Modal -->
+    <!-- Advanced Modern Modal: Add User -->
     <div class="modal-wrapper" *ngIf="showModal" (click)="onOverlayClick($event)">
       <div class="modal-glass animate-spring">
         <div class="modal-header">
@@ -137,24 +150,38 @@ import Swal from 'sweetalert2';
                 <input type="text" [(ngModel)]="newUser.username" name="username" required placeholder="اسم المشترك">
               </div>
             </div>
+            
             <div class="form-group">
               <label>البريد الإلكتروني</label>
               <div class="input-modern">
                 <input type="email" [(ngModel)]="newUser.email" name="email" required dir="ltr" placeholder="mail@example.com">
               </div>
             </div>
+            
             <div class="form-group">
               <label>كلمة المرور المؤقتة</label>
               <div class="input-modern">
                 <input type="password" [(ngModel)]="newUser.password" name="password" required dir="ltr" placeholder="••••••••">
               </div>
             </div>
+            
             <div class="form-group">
               <label>نوع السهم الاستثماري</label>
               <div class="input-modern select-wrapper">
                 <select [(ngModel)]="newUser.share_type" name="share_type" required>
                   <option value="full">سهم كامل (مقدم 3.5 جم - متبقي 28 جم)</option>
                   <option value="half">نصف سهم (مقدم 1.5 جم - متبقي 14 جم)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- New Dropdown to select role -->
+            <div class="form-group full-width-field">
+              <label>رتبة وصلاحية الحساب</label>
+              <div class="input-modern select-wrapper">
+                <select [(ngModel)]="newUser.role" name="role" required>
+                  <option value="user">عضو مساهم (صلاحيات عادية للوحة العضو)</option>
+                  <option value="supervisor">مشرف مراقب (متابعة وإدخال دون أرشيف/ملفات)</option>
                 </select>
               </div>
             </div>
@@ -187,6 +214,15 @@ import Swal from 'sweetalert2';
       padding: 0.4rem 1.2rem; border-radius: 100px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase;
       &.gold { background: rgba(212, 175, 55, 0.1); color: var(--primary); border: 1px solid var(--primary); }
       &.emerald { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+      
+      &.supervisor-badge {
+        background: rgba(167, 139, 250, 0.1);
+        color: #c084fc;
+        border: 1px solid rgba(167, 139, 250, 0.35);
+        font-family: 'Amiri', serif;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.8rem;
+      }
     }
 
     .actions { display: flex; gap: 0.75rem; }
@@ -195,6 +231,8 @@ import Swal from 'sweetalert2';
       background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; cursor: pointer;
       transition: all 0.3s ease; text-decoration: none;
       &:hover { transform: translateY(-3px); border-color: var(--primary); color: var(--primary); }
+      &.role-toggle:hover { border-color: #c084fc; color: #c084fc; background: rgba(167, 139, 250, 0.05); }
+      &.role-toggle.is-supervisor { border-color: #a78bfa; color: #a78bfa; background: rgba(167, 139, 250, 0.15); }
       &.delete:hover { border-color: #ff4d4d; color: #ff4d4d; }
     }
 
@@ -256,6 +294,9 @@ import Swal from 'sweetalert2';
           color: var(--primary);
           opacity: 0.8;
         }
+      }
+      &.full-width-field {
+        grid-column: span 2;
       }
     }
 
@@ -502,7 +543,7 @@ export class UsersComponent implements OnInit {
   saving = false;
   showModal = false;
 
-  newUser = { username: '', email: '', password: '', share_type: 'full' as ShareType };
+  newUser = { username: '', email: '', password: '', share_type: 'full' as ShareType, role: 'user' };
 
   ngOnInit() {
     this.loadUsers();
@@ -518,7 +559,8 @@ export class UsersComponent implements OnInit {
       Swal.fire('خطأ في التحميل', error.message, 'error');
     }
 
-    this.users = (data || []).filter((u: any) => u.role === 'user');
+    // Load both members and supervisor roles
+    this.users = (data || []).filter((u: any) => u.role === 'user' || u.role === 'supervisor');
     this.loading = false;
     this.cdr.detectChanges();
   }
@@ -538,25 +580,60 @@ export class UsersComponent implements OnInit {
       paid: 0,
       totalAmount: 0,
       isReceived: false,
-      role: 'user'
+      role: this.newUser.role || 'user'
     };
 
     const { error } = await this.dataService.addUser(userToSave);
     if (error) {
       Swal.fire('خطأ', error.message, 'error');
     } else {
-      Swal.fire({ title: 'تم', text: 'تم إضافة المستخدم بنجاح', icon: 'success', timer: 1500, showConfirmButton: false });
+      Swal.fire({ title: 'تمت الإضافة', text: 'تم إضافة العضو بنجاح وتعيين رتبته', icon: 'success', timer: 1500, showConfirmButton: false });
       this.showModal = false;
-      this.newUser = { username: '', email: '', password: '', share_type: 'full' };
+      this.newUser = { username: '', email: '', password: '', share_type: 'full', role: 'user' };
       this.loadUsers();
     }
     this.saving = false;
   }
 
+  async toggleRole(user: any) {
+    const newRole = user.role === 'supervisor' ? 'user' : 'supervisor';
+    const actionText = newRole === 'supervisor' 
+      ? `هل تريد ترقية "${user.username}" إلى رتبة مشرف مراقب؟ سيتم منحه صلاحية الإدخال والمتابعة ولكنه لن يتمكن من تصفح الأرشيف الكامل أو ملفات الأعضاء.`
+      : `هل تريد إلغاء صلاحية المشرف وتنزيل "${user.username}" إلى رتبة عضو مساهم عادي؟`;
+    
+    const res = await Swal.fire({
+      title: 'تعديل رتبة الحساب',
+      text: actionText,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'نعم، تأكيد التغيير',
+      cancelButtonText: 'إلغاء',
+      confirmButtonColor: 'var(--primary)'
+    });
+
+    if (res.isConfirmed) {
+      this.saving = true;
+      const { error } = await this.dataService.updateUser(user.id, { role: newRole });
+      if (error) {
+        Swal.fire('خطأ', error.message, 'error');
+      } else {
+        Swal.fire({
+          title: 'تم تعديل الرتبة',
+          text: `تم تغيير صلاحية العضو إلى ${newRole === 'supervisor' ? 'مشرف مراقب' : 'عضو مساهم'} بنجاح`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        await this.loadUsers();
+      }
+      this.saving = false;
+    }
+  }
+
   async deleteUser(user: any) {
     const res = await Swal.fire({
       title: 'هل أنت متأكد؟',
-      text: `سيتم حذف "${user.username}" وجميع معاملاته!`,
+      text: `سيتم حذف "${user.username}" وجميع معاملاته ومستنداته بالكامل!`,
       icon: 'warning', showCancelButton: true,
       confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء', confirmButtonColor: '#ef4444'
     });

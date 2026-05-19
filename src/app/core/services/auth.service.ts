@@ -12,6 +12,11 @@ export class AuthService {
 
   currentUser = computed(() => this.currentUserSignal());
   isAdmin = computed(() => this.currentUserSignal()?.role === 'admin');
+  isSupervisor = computed(() => this.currentUserSignal()?.role === 'supervisor');
+  isStaff = computed(() => {
+    const role = this.currentUserSignal()?.role;
+    return role === 'admin' || role === 'supervisor';
+  });
   isAuthenticated = computed(() => !!this.currentUserSignal());
 
   constructor(
@@ -91,7 +96,7 @@ export class AuthService {
   }
 
   private redirectUser(user: User) {
-    if (user.role === 'admin') {
+    if (user.role === 'admin' || user.role === 'supervisor') {
       this.router.navigate(['/admin']);
     } else {
       this.router.navigate(['/user']);

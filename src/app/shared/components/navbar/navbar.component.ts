@@ -6,7 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <nav class="navbar animate-spring">
       <div class="container glass-nav">
@@ -22,7 +22,10 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="avatar">👤</div>
             <div class="details">
               <p class="username">{{ authService.currentUser()?.username }}</p>
-              <p class="role-tag">{{ authService.isAdmin() ? 'مدير النظام' : 'عضو مساهم' }}</p>
+              <p class="role-tag">
+                {{ authService.currentUser()?.role === 'admin' ? 'مدير النظام' : 
+                   (authService.currentUser()?.role === 'supervisor' ? 'مشرف مراقب' : 'عضو مساهم') }}
+              </p>
             </div>
           </div>
           <button (click)="authService.logout()" class="btn-logout">

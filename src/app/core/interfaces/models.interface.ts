@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'user' | 'supervisor';
 export type ShareType = 'full' | 'half';
 
 export interface User {

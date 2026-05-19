@@ -37,7 +37,7 @@ export class DataService {
       paid: 0,
       totalAmount: 0,
       isReceived: false,
-      role: 'user'
+      role: userData.role || 'user'
     };
     return await this.supabaseSvc.client
       .from('users')
@@ -75,6 +75,19 @@ export class DataService {
   }
 
   // --- Approved Transactions ---
+  async addApprovedTransaction(transaction: any) {
+    return await this.supabaseSvc.client
+      .from('approved_transactions')
+      .insert([transaction]);
+  }
+
+  async updateApprovedTransaction(id: string, updates: any) {
+    return await this.supabaseSvc.client
+      .from('approved_transactions')
+      .update(updates)
+      .eq('id', id);
+  }
+
   async getApprovedTransactions(userId?: string) {
     if (userId) {
       // When fetching for a specific user - simple query, no join needed

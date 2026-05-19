@@ -18,7 +18,8 @@ export const adminGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isAdmin()) {
+  const role = authService.currentUser()?.role;
+  if (role === 'admin' || role === 'supervisor') {
     return true;
   }
 
@@ -26,11 +27,24 @@ export const adminGuard = () => {
   return false;
 };
 
+export const fullAdminGuard = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.currentUser()?.role === 'admin') {
+    return true;
+  }
+
+  router.navigate(['/admin']);
+  return false;
+};
+
 export const userGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAdmin() && authService.isAuthenticated()) {
+  const role = authService.currentUser()?.role;
+  if (role === 'user' && authService.isAuthenticated()) {
     return true;
   }
 

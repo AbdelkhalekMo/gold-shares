@@ -89,7 +89,7 @@ import { AuthService } from '../../../core/services/auth.service';
                   <td>{{ tx.gram_price | number }} ج.م</td>
                   <td class="text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</td>
                   <td>{{ tx.amount | number }} ج.م</td>
-                  <td class="date">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="date">{{ tx.created_at | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }} (بتوقيت القاهرة)</td>
                 </tr>
               </tbody>
             </table>

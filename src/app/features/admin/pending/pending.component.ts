@@ -49,7 +49,7 @@ import Swal from 'sweetalert2';
                   <td>{{ tx.gram_price | number }} ج.م</td>
                   <td class="text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</td>
                   <td>{{ tx.amount | number }} ج.م</td>
-                  <td class="date-cell">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="date-cell">{{ tx.created_at | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }} (بتوقيت القاهرة)</td>
                   <td class="actions">
                     <button (click)="approve(tx)" class="decision-btn approve">
                       <span class="icon">✓</span>
@@ -71,7 +71,7 @@ import Swal from 'sweetalert2';
                   <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
                   <div class="user-meta">
                     <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
-                    <span class="date">{{ tx.created_at | date:'yyyy-MM-dd HH:mm' }}</span>
+                    <span class="date">{{ tx.created_at | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }} (بتوقيت القاهرة)</span>
                   </div>
                 </div>
               </div>
