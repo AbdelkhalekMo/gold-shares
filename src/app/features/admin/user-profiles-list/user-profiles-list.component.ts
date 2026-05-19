@@ -53,7 +53,7 @@ import { DataService } from '../../../core/services/data.service';
                       {{ p.can_commit_monthly }}
                     </span>
                   </td>
-                  <td class="date-cell">{{ p.created_at | date:'yyyy-MM-dd' }}</td>
+                  <td class="date-cell">{{ p.created_at | date:'yyyy-MM-dd':'Africa/Cairo' }}</td>
                   <td class="actions">
                     <a [routerLink]="['/admin/user-profile', p.id]" class="action-btn view" title="عرض الملف">👤</a>
                   </td>
@@ -70,7 +70,7 @@ import { DataService } from '../../../core/services/data.service';
                   <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
                   <div class="user-meta">
                     <span class="username">{{ p.full_name }}</span>
-                    <span class="date">{{ p.created_at | date:'yyyy-MM-dd' }}</span>
+                    <span class="date">{{ p.created_at | date:'yyyy-MM-dd':'Africa/Cairo' }}</span>
                   </div>
                 </div>
                 <span class="badge-modern" [ngClass]="p.can_commit_monthly === 'نعم' ? 'emerald' : 'danger'">

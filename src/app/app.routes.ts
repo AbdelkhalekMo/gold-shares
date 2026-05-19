@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, userGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, userGuard, fullAdminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -17,6 +17,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
+        canActivate: [fullAdminGuard],
         loadComponent: () => import('./features/admin/users/users.component').then(m => m.UsersComponent)
       },
       {
@@ -26,6 +27,10 @@ export const routes: Routes = [
       {
         path: 'transactions',
         loadComponent: () => import('./features/admin/approved-list/approved-list.component').then(m => m.ApprovedListComponent)
+      },
+      {
+        path: 'all-transactions',
+        loadComponent: () => import('./features/admin/all-transactions/all-transactions.component').then(m => m.AllTransactionsComponent)
       },
       {
         path: 'transactions/:userId',
@@ -41,10 +46,12 @@ export const routes: Routes = [
       },
       {
         path: 'user-profile/:id',
+        canActivate: [fullAdminGuard],
         loadComponent: () => import('./features/admin/user-profile-view/user-profile-view.component').then(m => m.UserProfileViewComponent)
       },
       {
         path: 'profiles-list',
+        canActivate: [fullAdminGuard],
         loadComponent: () => import('./features/admin/user-profiles-list/user-profiles-list.component').then(m => m.UserProfilesListComponent)
       },
       {

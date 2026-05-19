@@ -16,20 +16,23 @@ import { AuthService } from '../../../core/services/auth.service';
           <button class="close-btn-mobile" (click)="closeSidebar()">×</button>
         </div>
         <div class="menu-items">
-          <ng-container *ngIf="authService.isAdmin(); else userMenu">
+          <ng-container *ngIf="authService.isStaff(); else userMenu">
             <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
                <span class="icon">🏠</span> <span class="label">الرئيسية</span>
             </a>
-            <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+            <a *ngIf="authService.currentUser()?.role === 'admin'" routerLink="/admin/users" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">👥</span> <span class="label">المستخدمين</span>
             </a>
             <a routerLink="/admin/pending" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">💎</span> <span class="label">الطلبات</span>
             </a>
+            <a routerLink="/admin/all-transactions" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+               <span class="icon">📜</span> <span class="label">سجل العمليات</span>
+            </a>
             <a routerLink="/admin/transactions" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📦</span> <span class="label">المخزون</span>
             </a>
-            <a routerLink="/admin/profiles-list" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+            <a *ngIf="authService.currentUser()?.role === 'admin'" routerLink="/admin/profiles-list" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📂</span> <span class="label">الأرشيف</span>
             </a>
           </ng-container>
@@ -52,7 +55,10 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="avatar-small">👤</div>
             <div class="details-small">
               <p class="username-small">{{ authService.currentUser()?.username }}</p>
-              <p class="role-tag-small">{{ authService.isAdmin() ? 'مدير النظام' : 'عضو مساهم' }}</p>
+              <p class="role-tag-small">
+                {{ authService.currentUser()?.role === 'admin' ? 'مدير النظام' : 
+                   (authService.currentUser()?.role === 'supervisor' ? 'مشرف مراقب' : 'عضو مساهم') }}
+              </p>
             </div>
           </div>
           <button (click)="logout()" class="btn-logout-sidebar">
