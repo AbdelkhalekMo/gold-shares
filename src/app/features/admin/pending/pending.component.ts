@@ -330,7 +330,7 @@ export class PendingComponent implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'نعم، موافقة',
       cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#d4ff00'
+      confirmButtonColor: '#d4af37'
     });
 
     if (!res.isConfirmed) return;

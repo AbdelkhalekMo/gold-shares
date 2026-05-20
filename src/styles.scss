@@ -286,3 +286,24 @@ select {
   font-weight: 700;
   text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
+
+// Global Print Styles
+@media print {
+  body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+  }
+  
+  .no-print, 
+  app-navbar, 
+  app-sidebar, 
+  .sidebar, 
+  .sidebar-overlay, 
+  .navbar, 
+  .reports-page, 
+  .modal-backdrop {
+    display: none !important;
+  }
+}
+

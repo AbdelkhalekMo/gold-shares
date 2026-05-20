@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../../core/services/data.service';
+import { getCairoDate } from '../../../core/utils/date-utils';
 
 @Component({
   selector: 'app-all-transactions',
@@ -502,11 +503,11 @@ export class AllTransactionsComponent implements OnInit {
     this.allTransactions = txsRes.data || [];
     
     // 3. Extract unique years active in database dynamically
-    const years = this.allTransactions.map(tx => new Date(tx.created_at).getFullYear());
+    const years = this.allTransactions.map(tx => getCairoDate(tx.created_at).getFullYear());
     this.availableYears = [...new Set(years)].sort((a, b) => b - a);
 
     // Default: Add current year if not present
-    const currentYear = new Date().getFullYear();
+    const currentYear = getCairoDate().getFullYear();
     if (!this.availableYears.includes(currentYear)) {
       this.availableYears.unshift(currentYear);
     }
@@ -537,7 +538,7 @@ export class AllTransactionsComponent implements OnInit {
     if (this.selectedYear !== 'all') {
       const targetYear = Number(this.selectedYear);
       result = result.filter(tx => {
-        const txDate = new Date(tx.created_at);
+        const txDate = getCairoDate(tx.created_at);
         const matchesYear = txDate.getFullYear() === targetYear;
 
         if (this.selectedMonth !== 'all') {

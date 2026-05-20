@@ -45,6 +45,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/late-payments/late-payments.component').then(m => m.LatePaymentsComponent)
       },
       {
+        path: 'reports',
+        canActivate: [fullAdminGuard],
+        loadComponent: () => import('./features/admin/reports/reports.component').then(m => m.ReportsComponent)
+      },
+      {
         path: 'user-profile/:id',
         canActivate: [fullAdminGuard],
         loadComponent: () => import('./features/admin/user-profile-view/user-profile-view.component').then(m => m.UserProfileViewComponent)

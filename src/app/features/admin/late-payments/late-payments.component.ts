@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../core/services/data.service';
+import { getCairoDate } from '../../../core/utils/date-utils';
 
 @Component({
   selector: 'app-late-payments',
@@ -238,7 +239,7 @@ import { DataService } from '../../../core/services/data.service';
 export class LatePaymentsComponent implements OnInit {
   dataService = inject(DataService);
   lateUsers: any[] = [];
-  startDate = new Date('2026-05-10');
+  startDate = getCairoDate('2026-05-10');
 
   async ngOnInit() {
     this.calculateLate();
@@ -248,7 +249,7 @@ export class LatePaymentsComponent implements OnInit {
     const { data, error } = await this.dataService.getUsers();
     if (error || !data) { console.error(error); return; }
 
-    const today = new Date();
+    const today = getCairoDate();
     const diffMonths =
       (today.getFullYear() - this.startDate.getFullYear()) * 12 +
       (today.getMonth() - this.startDate.getMonth());
