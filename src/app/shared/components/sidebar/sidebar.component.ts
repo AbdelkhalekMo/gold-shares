@@ -29,6 +29,9 @@ import { AuthService } from '../../../core/services/auth.service';
             <a routerLink="/admin/all-transactions" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📜</span> <span class="label">سجل العمليات</span>
             </a>
+            <a *ngIf="authService.currentUser()?.role === 'admin'" routerLink="/admin/reports" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+               <span class="icon">🖨️</span> <span class="label">كشوف الحسابات</span>
+            </a>
             <a routerLink="/admin/transactions" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📦</span> <span class="label">المخزون</span>
             </a>
