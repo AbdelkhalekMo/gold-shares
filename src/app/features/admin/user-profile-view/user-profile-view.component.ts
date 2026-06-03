@@ -19,7 +19,12 @@ import Swal from 'sweetalert2';
           </div>
         </div>
         <h1 class="islamic-header text-gradient">ملف العضو: {{ username }}</h1>
-        <p class="subtitle">استعراض وتدقيق البيانات التعريفية والمالية المسجلة من قبل العضو</p>
+        <p class="subtitle">
+          استعراض وتدقيق البيانات التعريفية والمالية المسجلة من قبل العضو 
+          <span *ngIf="user" style="color: var(--primary); font-weight: bold; margin-right: 0.5rem;">
+            (المقدم: {{ user.advance }} جم | الهدية: {{ user.gift || 0 }} جم)
+          </span>
+        </p>
       </div>
 
       <div *ngIf="loading()" class="modern-loading">
@@ -240,6 +245,7 @@ export class UserProfileViewComponent implements OnInit {
   hasProfile = false;
   userId: string | null = null;
   username: string = '';
+  user: any = null;
 
   constructor() {
     this.profileForm = this.fb.group({
@@ -286,6 +292,7 @@ export class UserProfileViewComponent implements OnInit {
     // First, fetch the user basic info to get the username
     const { data: userData } = await this.dataService.getUser(this.userId!);
     if (userData) {
+      this.user = userData;
       this.username = userData.username;
     }
 

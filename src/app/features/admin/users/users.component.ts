@@ -23,6 +23,70 @@ import Swal from 'sweetalert2';
         </div>
       </div>
 
+      <!-- Association Share Settings Card -->
+      <div class="card glass-glow settings-card animate-spring">
+        <div class="card-header-settings">
+          <span class="icon">⚙️</span>
+          <h2>إعدادات الجرامات والمقدمات للجمعية</h2>
+        </div>
+        <form (ngSubmit)="saveSettings()" class="settings-form">
+          <div class="settings-grid">
+            <div class="form-group">
+              <label>إجمالي جرامات السهم الكامل</label>
+              <div class="input-modern">
+                <input type="number" step="0.01" [(ngModel)]="settings.full_share_total" name="full_share_total" required>
+                <span class="badge-inside">جرام</span>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>إجمالي جرامات نصف السهم (محسوب)</label>
+              <div class="input-modern locked">
+                <input type="number" [value]="settings.full_share_total / 2.0" name="half_share_total" readonly>
+                <span class="badge-inside">جرام</span>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>مقدم السهم الكامل</label>
+              <div class="input-modern">
+                <input type="number" step="0.01" [(ngModel)]="settings.full_share_advance" name="full_share_advance" required>
+                <span class="badge-inside">جرام</span>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>مقدم نصف السهم</label>
+              <div class="input-modern">
+                <input type="number" step="0.01" [(ngModel)]="settings.half_share_advance" name="half_share_advance" required>
+                <span class="badge-inside">جرام</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>هدية السهم الكامل</label>
+              <div class="input-modern">
+                <input type="number" step="0.01" [(ngModel)]="settings.full_share_gift" name="full_share_gift" required>
+                <span class="badge-inside">جرام</span>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>هدية نصف السهم</label>
+              <div class="input-modern">
+                <input type="number" step="0.01" [(ngModel)]="settings.half_share_gift" name="half_share_gift" required>
+                <span class="badge-inside">جرام</span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="savingSettings">
+              {{ savingSettings ? 'جاري حفظ الإعدادات وتحديث الأرصدة...' : '💾 حفظ وتعميم الإعدادات' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
       <div *ngIf="loading" class="modern-loading">
         <div class="loader-orb"></div>
         <p>جاري استرجاع قائمة الأعضاء والمشرفين...</p>
@@ -37,9 +101,11 @@ import Swal from 'sweetalert2';
                 <tr>
                   <th>العضو المشترك</th>
                   <th>التواصل</th>
-                  <th>نوع الاشتراك الرتبة</th>
-                  <th>المطلوب</th>
+                  <th>نوع الاشتراك</th>
+                  <th>المقدم المطلوب</th>
+                  <th>الهدية المقدمة</th>
                   <th>المسدد</th>
+                  <th>المتبقي الكلي</th>
                   <th>الإجراءات</th>
                 </tr>
               </thead>
@@ -54,14 +120,16 @@ import Swal from 'sweetalert2';
                   <td class="email-cell">{{ user.email }}</td>
                   <td>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                      <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                        {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                      <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : (user.share_type === 'half' ? 'emerald' : 'purple')">
+                        {{ user.share_type === 'full' ? 'سهم كامل' : (user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
                       </span>
-                      <span *ngIf="user.role === 'supervisor'" class="badge-modern supervisor-badge" title="مشرف ذو صلاحيات مراقبة محدودة">مشرف مراقب</span>
+                      <span *ngIf="user.role === 'supervisor'" class="badge-modern supervisor-badge" title="مشرف ذو صلاحيات مراقبة محدودة">مشرف</span>
                     </div>
                   </td>
+                  <td class="font-bold text-accent">{{ user.advance }} جم</td>
+                  <td class="font-bold text-warning">{{ user.gift || 0 }} جم</td>
+                  <td class="text-success font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
                   <td class="text-danger font-bold">{{ user.remaining }} جم</td>
-                  <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
                   <td class="actions">
                     <a [routerLink]="['/admin/transactions', user.id]" class="action-btn view" title="سجل المعاملات الحسابية">👁️</a>
                     
@@ -91,12 +159,20 @@ import Swal from 'sweetalert2';
                     <span class="user-email">{{ user.email }}</span>
                   </div>
                 </div>
-                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                  {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : (user.share_type === 'half' ? 'emerald' : 'purple')">
+                  {{ user.share_type === 'full' ? 'سهم كامل' : (user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
                 </span>
               </div>
               
               <div class="card-body-user">
+                <div class="stat-item">
+                  <span class="label">المقدم المطلوب:</span>
+                  <span class="value text-accent font-bold">{{ user.advance }} جم</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">الهدية المقدمة:</span>
+                  <span class="value text-warning font-bold">{{ user.gift || 0 }} جم</span>
+                </div>
                 <div class="stat-item">
                   <span class="label">المسدد:</span>
                   <span class="value text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</span>
@@ -169,11 +245,39 @@ import Swal from 'sweetalert2';
               <label>نوع السهم الاستثماري</label>
               <div class="input-modern select-wrapper">
                 <select [(ngModel)]="newUser.share_type" name="share_type" required>
-                  <option value="full">سهم كامل (مقدم 3.5 جم - متبقي 28 جم)</option>
-                  <option value="half">نصف سهم (مقدم 1.5 جم - متبقي 14 جم)</option>
+                  <option value="full">سهم كامل (المقدم المطلوب: {{ settings.full_share_advance + (settings.full_share_gift || 0) }} جم [منهم {{ settings.full_share_gift || 0 }} هدية] - متبقي {{ settings.full_share_total - settings.full_share_advance - (settings.full_share_gift || 0) }} جم)</option>
+                  <option value="half">نصف سهم (المقدم المطلوب: {{ settings.half_share_advance + (settings.half_share_gift || 0) }} جم [منهم {{ settings.half_share_gift || 0 }} هدية] - متبقي {{ (settings.full_share_total / 2.0) - settings.half_share_advance - (settings.half_share_gift || 0) }} جم)</option>
+                  <option value="custom">مخصص (إدخال يدوي للمقدم، الإجمالي، والهدية)</option>
                 </select>
               </div>
             </div>
+
+            <!-- Custom Share Fields (Shown conditionally) -->
+            <ng-container *ngIf="newUser.share_type === 'custom'">
+              <div class="form-group">
+                <label>إجمالي السهم المخصص (توتال)</label>
+                <div class="input-modern">
+                  <input type="number" step="0.01" [(ngModel)]="customTotal" name="customTotal" required placeholder="مثال: 50.0">
+                  <span class="badge-inside">جرام</span>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>مقدم السهم المخصص</label>
+                <div class="input-modern">
+                  <input type="number" step="0.01" [(ngModel)]="customAdvance" name="customAdvance" required placeholder="مثال: 5.0">
+                  <span class="badge-inside">جرام</span>
+                </div>
+              </div>
+              
+              <div class="form-group full-width-field">
+                <label>هدية مخصصة من السهم (تُخصم من الإجمالي)</label>
+                <div class="input-modern">
+                  <input type="number" step="0.01" [(ngModel)]="customGift" name="customGift" placeholder="مثال: 1.5 (اختياري)">
+                  <span class="badge-inside">جرام</span>
+                </div>
+              </div>
+            </ng-container>
 
             <!-- New Dropdown to select role -->
             <div class="form-group full-width-field">
@@ -214,6 +318,7 @@ import Swal from 'sweetalert2';
       padding: 0.4rem 1.2rem; border-radius: 100px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase;
       &.gold { background: rgba(212, 175, 55, 0.1); color: var(--primary); border: 1px solid var(--primary); }
       &.emerald { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+      &.purple { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid #8b5cf6; }
       
       &.supervisor-badge {
         background: rgba(167, 139, 250, 0.1);
@@ -479,16 +584,73 @@ import Swal from 'sweetalert2';
             border-color: rgba(239, 68, 68, 0.1);
             color: #ff4d4d;
             
-            &:hover {
-              background: rgba(239, 68, 68, 0.15);
-              border-color: #ef4444;
-            }
-          }
-        }
+             &:hover {
+               background: rgba(239, 68, 68, 0.15);
+               border-color: #ef4444;
+             }
+           }
+         }
+       }
+     }
+ 
+     /* Share Settings Card */
+     .settings-card {
+       padding: 2rem;
+       margin-bottom: 2.5rem;
+       background: linear-gradient(135deg, rgba(4, 47, 36, 0.15) 0%, rgba(2, 6, 23, 0.4) 100%);
+       border: 1px solid var(--glass-border);
+       border-radius: 28px;
+       
+       .card-header-settings {
+         display: flex;
+         align-items: center;
+         gap: 0.75rem;
+         margin-bottom: 1.5rem;
+         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+         padding-bottom: 0.75rem;
+         
+         .icon { font-size: 1.5rem; }
+         h2 { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+       }
+     }
+     
+     .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
       }
-    }
-
-    @media (max-width: 768px) {
+     
+     .settings-actions {
+       display: flex;
+       justify-content: flex-end;
+       
+       button {
+         font-weight: 800;
+         padding: 0.95rem 2rem;
+       }
+     }
+     
+     .input-modern.locked {
+       input {
+         background: rgba(255, 255, 255, 0.02);
+         border-color: rgba(255, 255, 255, 0.05);
+         color: var(--accent);
+         font-weight: 900;
+       }
+     }
+     
+     .badge-inside {
+       position: absolute;
+       left: 1rem;
+       top: 50%;
+       transform: translateY(-50%);
+       font-size: 0.8rem;
+       color: var(--text-muted);
+       font-weight: 800;
+     }
+ 
+     @media (max-width: 768px) {
       .table-container {
         display: none !important;
       }
@@ -531,6 +693,17 @@ import Swal from 'sweetalert2';
         grid-template-columns: 1fr !important;
         gap: 1.25rem !important;
       }
+      .settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+      }
+      .settings-card {
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+      }
+      .settings-actions button {
+        width: 100% !important;
+      }
     }
   `]
 })
@@ -543,10 +716,76 @@ export class UsersComponent implements OnInit {
   saving = false;
   showModal = false;
 
+  settings = {
+    full_share_total: 31.5,
+    full_share_advance: 3.5,
+    half_share_advance: 1.5,
+    full_share_gift: 0,
+    half_share_gift: 0
+  };
+  savingSettings = false;
+
   newUser = { username: '', email: '', password: '', share_type: 'full' as ShareType, role: 'user' };
+
+  customTotal: number | null = null;
+  customAdvance: number | null = null;
+  customGift: number | null = null;
 
   ngOnInit() {
     this.loadUsers();
+    this.loadSettings();
+  }
+
+  async loadSettings() {
+    const { data, error } = await this.dataService.getAssociationSettings();
+    if (error) {
+      console.error('Error loading settings:', error);
+    } else if (data) {
+      this.settings = {
+        full_share_total: Number(data.full_share_total),
+        full_share_advance: Number(data.full_share_advance),
+        half_share_advance: Number(data.half_share_advance),
+        full_share_gift: Number(data.full_share_gift || 0),
+        half_share_gift: Number(data.half_share_gift || 0)
+      };
+    }
+    this.cdr.detectChanges();
+  }
+
+  async saveSettings() {
+    if (this.settings.full_share_total <= 0 || 
+        this.settings.full_share_advance < 0 || 
+        this.settings.half_share_advance < 0 ||
+        this.settings.full_share_gift < 0 ||
+        this.settings.half_share_gift < 0) {
+      Swal.fire('خطأ', 'برجاء إدخال قيم صحيحة أكبر من الصفر', 'warning');
+      return;
+    }
+    this.savingSettings = true;
+    this.cdr.detectChanges();
+
+    const { error } = await this.dataService.updateAssociationSettings({
+      full_share_total: this.settings.full_share_total,
+      full_share_advance: this.settings.full_share_advance,
+      half_share_advance: this.settings.half_share_advance,
+      full_share_gift: this.settings.full_share_gift,
+      half_share_gift: this.settings.half_share_gift
+    });
+
+    if (error) {
+      Swal.fire('خطأ في الحفظ', error.message, 'error');
+    } else {
+      Swal.fire({
+        title: 'تم حفظ الإعدادات',
+        text: 'تم تحديث أوزان ومقدمات الأسهم لجميع المشتركين تلقائياً بالكامل',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      await this.loadUsers();
+    }
+    this.savingSettings = false;
+    this.cdr.detectChanges();
   }
 
   async loadUsers() {
@@ -569,18 +808,67 @@ export class UsersComponent implements OnInit {
     if (!this.newUser.username || !this.newUser.email || !this.newUser.password) return;
     this.saving = true;
 
-    const isFull = this.newUser.share_type === 'full';
+    if (this.newUser.share_type === 'custom') {
+      if (!this.customTotal || this.customTotal <= 0) {
+        Swal.fire('تنبيه', 'يرجى إدخال إجمالي الجرامات المخصصة بشكل صحيح', 'warning');
+        this.saving = false;
+        return;
+      }
+      if (this.customAdvance === null || this.customAdvance < 0) {
+        Swal.fire('تنبيه', 'يرجى إدخال قيمة المقدم المخصص بشكل صحيح', 'warning');
+        this.saving = false;
+        return;
+      }
+      const total = Number(this.customTotal || 0);
+      const adv = Number(this.customAdvance || 0);
+      const gift = Number(this.customGift || 0);
+      if (total - gift - adv < 0) {
+        Swal.fire('تنبيه', 'المجموع المخصص ناقص الهدية والمقدم لا يمكن أن يكون أقل من صفر', 'warning');
+        this.saving = false;
+        return;
+      }
+    }
+
+    let advance = 0;
+    let remaining = 0;
+    let gift = 0;
+
+    if (this.newUser.share_type === 'full') {
+      const fullTotal = this.settings.full_share_total;
+      const fullAdvance = this.settings.full_share_advance;
+      const fullGift = this.settings.full_share_gift || 0;
+      advance = fullAdvance + fullGift;
+      remaining = fullTotal - fullGift - fullAdvance;
+      gift = fullGift;
+    } else if (this.newUser.share_type === 'half') {
+      const fullTotal = this.settings.full_share_total;
+      const halfAdvance = this.settings.half_share_advance;
+      const halfTotal = fullTotal / 2.0;
+      const halfGift = this.settings.half_share_gift || 0;
+      advance = halfAdvance + halfGift;
+      remaining = halfTotal - halfGift - halfAdvance;
+      gift = halfGift;
+    } else if (this.newUser.share_type === 'custom') {
+      const total = Number(this.customTotal || 0);
+      const adv = Number(this.customAdvance || 0);
+      const giftVal = Number(this.customGift || 0);
+      advance = adv + giftVal;
+      remaining = (total - giftVal) - adv;
+      gift = giftVal;
+    }
+
     const userToSave = {
       username: this.newUser.username,
       email: this.newUser.email,
       password: this.newUser.password,
       share_type: this.newUser.share_type,
-      advance: isFull ? 3.5 : 1.5,
-      remaining: isFull ? 28 : 14,
+      advance: advance,
+      remaining: remaining,
       paid: 0,
       totalAmount: 0,
       isReceived: false,
-      role: this.newUser.role || 'user'
+      role: this.newUser.role || 'user',
+      gift: gift
     };
 
     const { error } = await this.dataService.addUser(userToSave);
@@ -590,6 +878,9 @@ export class UsersComponent implements OnInit {
       Swal.fire({ title: 'تمت الإضافة', text: 'تم إضافة العضو بنجاح وتعيين رتبته', icon: 'success', timer: 1500, showConfirmButton: false });
       this.showModal = false;
       this.newUser = { username: '', email: '', password: '', share_type: 'full', role: 'user' };
+      this.customTotal = null;
+      this.customAdvance = null;
+      this.customGift = null;
       this.loadUsers();
     }
     this.saving = false;

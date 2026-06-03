@@ -33,8 +33,8 @@ import { DataService } from '../../../core/services/data.service';
               <div class="avatar-box">{{ user.username.charAt(0) }}</div>
               <div class="info">
                 <h3>{{ user.username }}</h3>
-                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                  {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : (user.share_type === 'half' ? 'emerald' : 'purple')">
+                  {{ user.share_type === 'full' ? 'سهم كامل' : (user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
                 </span>
               </div>
             </div>
@@ -101,6 +101,7 @@ import { DataService } from '../../../core/services/data.service';
       padding: 0.3rem 0.8rem; border-radius: 100px; font-size: 0.65rem; font-weight: 900;
       &.gold { background: rgba(212, 175, 55, 0.1); color: var(--primary); border: 1px solid var(--primary); }
       &.emerald { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+      &.purple { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid #8b5cf6; }
     }
 
     .card-stats {

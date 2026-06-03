@@ -1,5 +1,5 @@
 export type UserRole = 'admin' | 'user' | 'supervisor';
-export type ShareType = 'full' | 'half';
+export type ShareType = 'full' | 'half' | 'custom';
 
 export interface User {
   id: string;
@@ -13,6 +13,9 @@ export interface User {
   isReceived: boolean; // تم_الاستلام
   role: UserRole;
   created_at: string;
+  gift?: number;
+  initial_advance?: number;
+  initial_remaining?: number;
 }
 
 export interface Transaction {
@@ -21,6 +24,8 @@ export interface Transaction {
   gram_price: number;
   grams: number;
   amount: number;
+  payment_type?: 'advance' | 'normal';
+  payment_period?: '1_month' | '3_months' | null;
   created_at: string;
   user?: Partial<User>; // For joins
 }
@@ -34,6 +39,12 @@ export interface Stats {
   totalTransactions: number;
   totalMoney: number;
   totalGrams: number;
+  totalRequiredGrams?: number;
+  receivedCount?: number;
+  remainingGrams?: number;
+  totalGiftsGrams?: number;
+  paidGiftsGrams?: number;
+  remainingGiftsGrams?: number;
 }
 
 export interface UserProfile {

@@ -31,6 +31,7 @@ import Swal from 'sweetalert2';
               <thead>
                 <tr>
                   <th>المشترك</th>
+                  <th>نوع الطلب</th>
                   <th>سعر اليوم</th>
                   <th>الوزن المطلوب</th>
                   <th>القيمة الإجمالية</th>
@@ -43,8 +44,18 @@ import Swal from 'sweetalert2';
                   <td>
                     <div class="user-cell">
                       <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
-                      <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                      <div style="display: flex; flex-direction: column; gap: 0.1rem;">
+                        <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                        <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);" *ngIf="tx.user">
+                          المقدم: {{ tx.user.advance }} جم | الهدية: {{ tx.user.gift || 0 }} جم
+                        </span>
+                      </div>
                     </div>
+                  </td>
+                  <td>
+                    <span class="badge-type" [class.advance]="tx.payment_type === 'advance'" [class.normal]="tx.payment_type !== 'advance'">
+                      {{ tx.payment_type === 'advance' ? '💎 مقدم' : (tx.payment_period === '3_months' ? '📈 3 شهور' : '📈 دفع شهر') }}
+                    </span>
                   </td>
                   <td>{{ tx.gram_price | number }} ج.م</td>
                   <td class="text-gold font-bold">{{ tx.grams | number:'1.0-3' }} جم</td>
@@ -71,12 +82,23 @@ import Swal from 'sweetalert2';
                   <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
                   <div class="user-meta">
                     <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                    <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);" *ngIf="tx.user">
+                      المقدم: {{ tx.user.advance }} جم | الهدية: {{ tx.user.gift || 0 }} جم
+                    </span>
                     <span class="date">{{ tx.created_at | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }} (بتوقيت القاهرة)</span>
                   </div>
                 </div>
               </div>
               
               <div class="card-body-pending">
+                <div class="stat-item full-width" style="border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 0.5rem; margin-bottom: 0.25rem; border-top: none; padding-top: 0; margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-direction: row;">
+                  <span class="label">نوع الطلب:</span>
+                  <span class="value">
+                    <span class="badge-type" [class.advance]="tx.payment_type === 'advance'" [class.normal]="tx.payment_type !== 'advance'">
+                      {{ tx.payment_type === 'advance' ? '💎 مقدم' : (tx.payment_period === '3_months' ? '📈 3 شهور' : '📈 دفع شهر') }}
+                    </span>
+                  </span>
+                </div>
                 <div class="stat-item">
                   <span class="label">سعر الجرام اليوم:</span>
                   <span class="value">{{ tx.gram_price | number }} ج.م</span>
@@ -117,6 +139,34 @@ import Swal from 'sweetalert2';
     .pending-page { padding: 1rem 0; }
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3.5rem; }
     .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem; }
+
+    .badge-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      
+      &.advance {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: rgba(212, 175, 55, 0.2);
+        color: var(--primary);
+      }
+      
+      &.normal {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
+        color: var(--accent);
+      }
+      
+      .period-text {
+        font-size: 0.75rem;
+        opacity: 0.8;
+      }
+    }
 
     .user-cell { display: flex; align-items: center; gap: 1rem; 
       .user-avatar { width: 38px; height: 38px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 1px solid var(--glass-border); }
@@ -318,6 +368,7 @@ export class PendingComponent implements OnInit {
     }
 
     this.pendingTxs = data || [];
+    this.dataService.pendingCount.set(this.pendingTxs.length);
     this.loading = false;
     this.cdr.detectChanges();
   }

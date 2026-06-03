@@ -29,6 +29,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
     .main-container {
       display: flex;
       flex: 1;
+      margin-top: 100px;
     }
     .content-area {
       flex: 1;
@@ -36,6 +37,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
       background: transparent;
       min-width: 0;
       position: relative;
+      margin-right: 280px;
     }
     .sidebar-overlay {
       display: none;
@@ -48,11 +50,27 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
       opacity: 0;
       transition: opacity 0.3s ease;
     }
+    @media (max-width: 1024px) {
+      .content-area {
+        margin-right: 240px;
+      }
+    }
     @media (max-width: 768px) {
-      .content-area { padding: 1.25rem; }
+      .main-container {
+        margin-top: 80px;
+      }
+      .content-area {
+        padding: 1.25rem;
+        margin-right: 0;
+      }
       .sidebar-overlay.active {
         display: block;
         opacity: 1;
+      }
+    }
+    @media (max-width: 480px) {
+      .main-container {
+        margin-top: 72px;
       }
     }
   `]
