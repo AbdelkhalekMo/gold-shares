@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -28,6 +28,72 @@ import Swal from 'sweetalert2';
           <!-- Stacking context prioritized via position & z-index -->
           <form (ngSubmit)="onSubmit()" #txForm="ngForm" class="modern-form">
             
+            <!-- Payment Type Selector (Segmented Cards) -->
+            <div class="form-group">
+              <label><span class="icon-label">🏷️</span> نوع الطلب</label>
+              
+              <div *ngIf="checkingAdvance" class="segmented-control skeleton-loading">
+                <div class="control-btn skeleton">
+                  <div class="skeleton-icon"></div>
+                  <div class="skeleton-text"></div>
+                </div>
+                <div class="control-btn skeleton">
+                  <div class="skeleton-icon"></div>
+                  <div class="skeleton-text"></div>
+                </div>
+              </div>
+
+              <div *ngIf="!checkingAdvance" class="segmented-control">
+                <button
+                  type="button"
+                  class="control-btn"
+                  [class.active]="tx.payment_type === 'advance'"
+                  [disabled]="isAdvancePaid"
+                  [title]="isAdvancePaid ? 'لقد قمت بسداد المقدم بالفعل' : ''"
+                  (click)="setPaymentType('advance')"
+                >
+                  <span class="btn-icon">💎</span>
+                  <span class="btn-title">مقدم</span>
+                  <span class="btn-subtitle">المتبقي: {{ getMaxAdvanceAllowed() | number:'1.0-3' }} جم</span>
+                </button>
+                <button
+                  type="button"
+                  class="control-btn"
+                  [class.active]="tx.payment_type === 'normal'"
+                  [disabled]="isRemainingPaid"
+                  [title]="isRemainingPaid ? 'لقد قمت بسداد كامل السهم بالفعل' : ''"
+                  (click)="setPaymentType('normal')"
+                >
+                  <span class="btn-icon">📈</span>
+                  <span class="btn-title">دفع عادي سهم</span>
+                  <span class="btn-subtitle">المتبقي: {{ getMaxNormalAllowed() | number:'1.0-3' }} جم</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Payment Period Selector (Conditionally shown) -->
+            <div class="form-group animate-slide-down" *ngIf="tx.payment_type === 'normal'">
+              <label><span class="icon-label">📅</span> مدة الدفع</label>
+              <div class="segmented-control secondary">
+                <button
+                  type="button"
+                  class="control-btn"
+                  [class.active]="tx.payment_period === '1_month'"
+                  (click)="setPaymentPeriod('1_month')"
+                >
+                  <span class="btn-title">دفع شهر واحد</span>
+                </button>
+                <button
+                  type="button"
+                  class="control-btn"
+                  [class.active]="tx.payment_period === '3_months'"
+                  (click)="setPaymentPeriod('3_months')"
+                >
+                  <span class="btn-title">ثلاثة شهور</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Gram Price Daily -->
             <div class="form-group">
               <label for="gram_price">
@@ -53,7 +119,7 @@ import Swal from 'sweetalert2';
               <label for="grams">
                 <span class="icon-label">⚖️</span> الوزن المشترى بالجرام
               </label>
-              <div class="input-wrapper">
+              <div class="input-wrapper" [class.has-error]="isGramsExceeded()">
                 <input
                   id="grams"
                   type="text"
@@ -66,6 +132,11 @@ import Swal from 'sweetalert2';
                 >
                 <span class="prefix-badge">جرام (جم)</span>
               </div>
+              
+              <!-- Validation Warning Message -->
+              <span class="validation-error-msg animate-slide-down" *ngIf="isGramsExceeded()">
+                ⚠️ الوزن المدخل يتجاوز الحد الأقصى المسموح به سداده حالياً لهذا الجزء وهو ({{ getMaxAllowed() | number:'1.0-3' }} جم)
+              </span>
               
               <!-- Luxury Preset Chips -->
               <div class="preset-chips-container">
@@ -108,6 +179,12 @@ import Swal from 'sweetalert2';
               </div>
               <div class="invoice-body">
                 <div class="invoice-item">
+                  <span class="label">نوع الطلب:</span>
+                  <span class="value font-bold text-gradient-gold" style="-webkit-text-fill-color: initial; background: none; color: var(--primary);">
+                    {{ tx.payment_type === 'advance' ? 'مقدم' : (tx.payment_period === '1_month' ? 'دفع شهر' : '3 شهور') }}
+                  </span>
+                </div>
+                <div class="invoice-item">
                   <span class="label">الصنف المختار:</span>
                   <span class="value">ذهب عيار 21 قيراط</span>
                 </div>
@@ -135,7 +212,7 @@ import Swal from 'sweetalert2';
             <button
               type="submit"
               class="submit-btn-premium"
-              [disabled]="loading || !txForm.valid"
+              [disabled]="loading || !txForm.valid || isGramsExceeded()"
             >
               <div class="btn-glow-container"></div>
               <span class="btn-content" *ngIf="!loading">
@@ -521,6 +598,192 @@ import Swal from 'sweetalert2';
       to { transform: rotate(360deg); }
     }
 
+    /* Segmented Controls for Premium Choices */
+    .segmented-control {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      direction: rtl;
+      
+      .control-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 18px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        .btn-icon {
+          font-size: 1.5rem;
+          transition: transform 0.3s ease;
+        }
+        .btn-title {
+          font-size: 0.95rem;
+          font-weight: 800;
+        }
+        .btn-subtitle {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin-top: 0.2rem;
+          font-weight: 700;
+        }
+        
+        &:hover {
+          background: rgba(212, 175, 55, 0.05);
+          border-color: rgba(212, 175, 55, 0.2);
+          color: var(--primary);
+          
+          .btn-icon {
+            transform: scale(1.15);
+          }
+        }
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+          background: rgba(0, 0, 0, 0.2);
+          border-color: rgba(255, 255, 255, 0.03);
+          color: var(--text-muted);
+          &:hover {
+            background: rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            .btn-icon { transform: none; }
+          }
+        }
+
+        &.active {
+          background: rgba(212, 175, 55, 0.12);
+          border-color: var(--primary);
+          color: #fff;
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 10px rgba(212, 175, 55, 0.05);
+          
+          .btn-icon {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 8px var(--primary));
+          }
+          .btn-subtitle {
+            color: var(--primary);
+          }
+        }
+      }
+      
+      &.secondary {
+        gap: 0.75rem;
+        .control-btn {
+          padding: 0.85rem;
+          flex-direction: row;
+          border-radius: 14px;
+          
+          &.active {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+          }
+          &:hover:not(.active) {
+            background: rgba(16, 185, 129, 0.04);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent);
+          }
+        }
+      }
+
+      &.skeleton-loading {
+        pointer-events: none;
+        
+        .skeleton {
+          background: rgba(255, 255, 255, 0.01) !important;
+          border: 1px solid rgba(255, 255, 255, 0.03) !important;
+          position: relative;
+          overflow: hidden;
+          
+          &::after {
+            content: "";
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(212, 175, 55, 0.05),
+              transparent
+            );
+            animation: skeleton-shimmer 1.6s infinite;
+          }
+        }
+        
+        .skeleton-icon {
+          width: 32px;
+          height: 32px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 50%;
+          margin-bottom: 0.5rem;
+        }
+        
+        .skeleton-text {
+          width: 60px;
+          height: 12px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 4px;
+        }
+      }
+    }
+
+    /* Micro animations */
+    .animate-slide-down {
+      animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes skeleton-shimmer {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    .validation-error-msg {
+      color: #ef4444;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .input-wrapper.has-error {
+      input {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.15), inset 0 0 10px rgba(239, 68, 68, 0.05) !important;
+        
+        &:focus {
+          border-color: #ef4444 !important;
+          box-shadow: 0 0 25px rgba(239, 68, 68, 0.25) !important;
+        }
+      }
+      .prefix-badge {
+        background: rgba(239, 68, 68, 0.12) !important;
+        border-color: rgba(239, 68, 68, 0.25) !important;
+        color: #f87171 !important;
+      }
+    }
+
     @media (max-width: 768px) {
       .new-tx-page { padding: 1.5rem 0; }
       .page-header { margin-bottom: 2rem; }
@@ -572,10 +835,11 @@ import Swal from 'sweetalert2';
     }
   `]
 })
-export class NewTransactionComponent {
+export class NewTransactionComponent implements OnInit {
   dataService = inject(DataService);
   authService = inject(AuthService);
   router = inject(Router);
+  cdr = inject(ChangeDetectorRef);
 
   loading = false;
   selectedKarat = '21'; // Fixed Karat 21 strictly
@@ -591,8 +855,128 @@ export class NewTransactionComponent {
   tx = {
     gram_price: '3500' as string | number | null, // Pre-populated with default 21K price for ultimate ease of use!
     grams: '' as string | number | null,
-    amount: '' as string | number | null
+    amount: '' as string | number | null,
+    payment_type: 'advance' as 'advance' | 'normal',
+    payment_period: null as '1_month' | '3_months' | null
   };
+
+  isAdvancePaid = false;
+  isRemainingPaid = false;
+  checkingAdvance = true;
+  userAdvance = 0;
+  userRemaining = 0;
+  pendingAdvance = 0;
+  pendingNormal = 0;
+
+  constructor() {
+    console.log('NewTransactionComponent constructor start');
+    const user = this.authService.currentUser();
+    console.log('User in constructor:', user);
+    if (user) {
+      this.userAdvance = Number(user.advance || 0);
+      this.userRemaining = Number(user.remaining || 0);
+      this.isAdvancePaid = this.userAdvance <= 0;
+      this.isRemainingPaid = this.userRemaining <= 0;
+      if (this.isAdvancePaid) {
+        this.tx.payment_type = 'normal';
+        this.tx.payment_period = '1_month';
+        this.checkingAdvance = false;
+      }
+    }
+    console.log('NewTransactionComponent constructor end, checkingAdvance =', this.checkingAdvance);
+  }
+
+  async ngOnInit() {
+    console.log('NewTransactionComponent ngOnInit start');
+    try {
+      console.log('Calling refreshCurrentUser...');
+      await this.authService.refreshCurrentUser();
+      console.log('refreshCurrentUser completed');
+      
+      const user = this.authService.currentUser();
+      console.log('User after refresh:', user);
+      if (user) {
+        this.userAdvance = Number(user.advance || 0);
+        this.userRemaining = Number(user.remaining || 0);
+        const userId = user.id;
+        
+        let pendingAdvanceGrams = 0;
+        let pendingNormalGrams = 0;
+        try {
+          console.log('Querying transactions for user:', userId);
+          const pendingRes = await this.dataService.getPendingTransactions(userId);
+          console.log('Transactions queried successfully');
+          const pendingList = pendingRes?.data || [];
+          
+          pendingAdvanceGrams = pendingList
+            .filter((tx: any) => tx.payment_type === 'advance')
+            .reduce((sum: number, tx: any) => sum + Number(tx.grams || 0), 0);
+            
+          pendingNormalGrams = pendingList
+            .filter((tx: any) => tx.payment_type === 'normal')
+            .reduce((sum: number, tx: any) => sum + Number(tx.grams || 0), 0);
+        } catch (dbErr) {
+          console.error('Failed to query user transactions history:', dbErr);
+        }
+        
+        this.pendingAdvance = pendingAdvanceGrams;
+        this.pendingNormal = pendingNormalGrams;
+        
+        this.isAdvancePaid = (this.userAdvance - this.pendingAdvance) <= 0;
+        this.isRemainingPaid = (this.userRemaining - this.pendingNormal) <= 0;
+      }
+      
+      // 3. Set default transaction type based on advance payment state
+      if (this.isAdvancePaid) {
+        this.tx.payment_type = 'normal';
+        this.tx.payment_period = '1_month';
+      } else {
+        this.tx.payment_type = 'advance';
+        this.tx.payment_period = null;
+      }
+    } catch (err) {
+      console.error('Error loading transaction configuration:', err);
+    } finally {
+      this.checkingAdvance = false;
+      this.cdr.detectChanges();
+      console.log('NewTransactionComponent ngOnInit end, checkingAdvance =', this.checkingAdvance);
+    }
+  }
+
+  getMaxAdvanceAllowed(): number {
+    const limit = this.userAdvance - this.pendingAdvance;
+    return limit > 0 ? Number(limit.toFixed(3)) : 0;
+  }
+
+  getMaxNormalAllowed(): number {
+    const limit = this.userRemaining - this.pendingNormal;
+    return limit > 0 ? Number(limit.toFixed(3)) : 0;
+  }
+
+  getMaxAllowed(): number {
+    return this.tx.payment_type === 'advance' ? this.getMaxAdvanceAllowed() : this.getMaxNormalAllowed();
+  }
+
+  isGramsExceeded(): boolean {
+    const grams = Number(this.tx.grams);
+    if (!grams) return false;
+    const max = this.getMaxAllowed();
+    return grams > max;
+  }
+
+  setPaymentType(type: 'advance' | 'normal') {
+    if (type === 'advance' && this.isAdvancePaid) return;
+    this.tx.payment_type = type;
+    if (type === 'advance') {
+      this.tx.payment_period = null;
+    } else {
+      this.tx.payment_period = '1_month';
+    }
+  }
+
+  setPaymentPeriod(period: '1_month' | '3_months') {
+    this.tx.payment_period = period;
+  }
 
   selectPreset(weight: number) {
     this.tx.grams = weight;
@@ -633,7 +1017,9 @@ export class NewTransactionComponent {
       user_id: user.id,
       gram_price: price,
       grams: grams,
-      amount: amount
+      amount: amount,
+      payment_type: this.tx.payment_type,
+      payment_period: this.tx.payment_type === 'normal' ? this.tx.payment_period : null
     });
 
     if (error) {
@@ -646,8 +1032,14 @@ export class NewTransactionComponent {
         confirmButtonText: 'حسناً',
         confirmButtonColor: '#d4ff00'
       });
-      // Reset form
-      this.tx = { gram_price: '3500', grams: '', amount: '' };
+      // Reset form dynamically based on advance paid state
+      this.tx = {
+        gram_price: '3500',
+        grams: '',
+        amount: '',
+        payment_type: this.isAdvancePaid ? 'normal' : 'advance',
+        payment_period: this.isAdvancePaid ? '1_month' : null
+      };
       this.router.navigate(['/user']);
     }
     this.loading = false;

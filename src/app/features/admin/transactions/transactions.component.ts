@@ -21,6 +21,7 @@ import Swal from 'sweetalert2';
         <div class="print-meta">
           <p><strong>العضو المشترك:</strong> {{ user?.username || '---' }}</p>
           <p><strong>البريد الإلكتروني:</strong> {{ user?.email || '---' }}</p>
+          <p><strong>المقدم والهدية:</strong> مقدم: {{ user?.advance || 0 }} جم | هدية: {{ user?.gift || 0 }} جم</p>
           <p><strong>تاريخ إصدار الكشف:</strong> {{ currentDate | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }} (بتوقيت القاهرة)</p>
         </div>
         <div class="print-divider"></div>
@@ -30,7 +31,11 @@ import Swal from 'sweetalert2';
       <div class="page-header print-hide">
         <div class="header-left">
           <a routerLink="/admin/users" class="back-link">← العودة للمشتركين</a>
-          <h1>معاملات العضو: <span class="text-gradient">{{ user?.username || 'جاري التحميل...' }}</span></h1>
+          <h1>معاملات العضو: <span class="text-gradient">{{ user?.username || 'جاري التحميل...' }}</span>
+            <span *ngIf="user" style="font-size: 1rem; margin-right: 1rem; color: var(--primary);">
+              (المقدم: {{ user.advance }} جم | الهدية: {{ user.gift || 0 }} جم)
+            </span>
+          </h1>
           <p class="subtitle">المراجعة التفصيلية، التعديل الفوري، الإدخال اليدوي وطباعة الكشوفات</p>
         </div>
         <div class="actions-header">
@@ -52,6 +57,7 @@ import Swal from 'sweetalert2';
               <thead>
                 <tr>
                   <th>رقم العملية</th>
+                  <th>نوع الدفع</th>
                   <th>سعر الجرام</th>
                   <th>الوزن المطلوب</th>
                   <th>إجمالي المبلغ</th>
@@ -62,6 +68,11 @@ import Swal from 'sweetalert2';
               <tbody>
                 <tr *ngFor="let tx of transactions">
                   <td class="tx-number-cell">#{{ tx.transaction_number }}</td>
+                  <td>
+                    <span class="badge-type" [class.advance]="tx.payment_type === 'advance'" [class.normal]="tx.payment_type !== 'advance'">
+                      {{ tx.payment_type === 'advance' ? '💎 مقدم' : (tx.payment_period === '3_months' ? '📈 3 شهور' : '📈 دفع شهر') }}
+                    </span>
+                  </td>
                   <td>{{ tx.gram_price | number }} ج.م</td>
                   <td class="font-bold text-success">{{ tx.grams | number:'1.0-3' }} جم</td>
                   <td class="font-bold text-accent">{{ tx.amount | number }} ج.م</td>
@@ -86,6 +97,14 @@ import Swal from 'sweetalert2';
               </div>
               
               <div class="card-body-tx">
+                <div class="stat-item full-width" style="border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 0.5rem; margin-bottom: 0.25rem; border-top: none; padding-top: 0; margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-direction: row;">
+                  <span class="label">نوع الطلب:</span>
+                  <span class="value">
+                    <span class="badge-type" [class.advance]="tx.payment_type === 'advance'" [class.normal]="tx.payment_type !== 'advance'">
+                      {{ tx.payment_type === 'advance' ? '💎 مقدم' : (tx.payment_period === '3_months' ? '📈 3 شهور' : '📈 دفع شهر') }}
+                    </span>
+                  </span>
+                </div>
                 <div class="stat-item">
                   <span class="label">سعر الجرام:</span>
                   <span class="value">{{ tx.gram_price | number }} ج.م</span>
@@ -144,6 +163,28 @@ import Swal from 'sweetalert2';
                 <input type="number" step="0.001" [(ngModel)]="newTx.grams" name="grams" required (input)="calculateNewAmount()" placeholder="مثال: 5.25">
               </div>
             </div>
+
+            <div class="form-group">
+              <label>نوع الطلب</label>
+              <div class="select-modern-wrapper" style="position: relative; width: 100%;">
+                <select [(ngModel)]="newTx.payment_type" name="payment_type" required style="width: 100%; background: rgba(4, 47, 36, 0.25); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 16px; padding: 0.95rem 1.25rem; color: #fff; font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none;">
+                  <option value="advance">💎 مقدم</option>
+                  <option value="normal">📈 دفع عادي سهم</option>
+                </select>
+                <span style="font-size: 0.6rem; color: var(--primary); position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); pointer-events: none;">▼</span>
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="newTx.payment_type === 'normal'">
+              <label>مدة الدفع</label>
+              <div class="select-modern-wrapper" style="position: relative; width: 100%;">
+                <select [(ngModel)]="newTx.payment_period" name="payment_period" required style="width: 100%; background: rgba(4, 47, 36, 0.25); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 16px; padding: 0.95rem 1.25rem; color: #fff; font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none;">
+                  <option value="1_month">دفع شهر واحد</option>
+                  <option value="3_months">ثلاثة شهور</option>
+                </select>
+                <span style="font-size: 0.6rem; color: var(--primary); position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); pointer-events: none;">▼</span>
+              </div>
+            </div>
             
             <div class="form-group full-width">
               <label>إجمالي القيمة التقديرية (محسوبة تلقائياً)</label>
@@ -189,6 +230,28 @@ import Swal from 'sweetalert2';
                 <input type="number" step="0.001" [(ngModel)]="editTxForm.grams" name="edit_grams" required (input)="calculateEditAmount()">
               </div>
             </div>
+
+            <div class="form-group">
+              <label>نوع الطلب</label>
+              <div class="select-modern-wrapper" style="position: relative; width: 100%;">
+                <select [(ngModel)]="editTxForm.payment_type" name="edit_payment_type" required style="width: 100%; background: rgba(4, 47, 36, 0.25); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 16px; padding: 0.95rem 1.25rem; color: #fff; font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none;">
+                  <option value="advance">💎 مقدم</option>
+                  <option value="normal">📈 دفع عادي سهم</option>
+                </select>
+                <span style="font-size: 0.6rem; color: var(--primary); position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); pointer-events: none;">▼</span>
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="editTxForm.payment_type === 'normal'">
+              <label>مدة الدفع</label>
+              <div class="select-modern-wrapper" style="position: relative; width: 100%;">
+                <select [(ngModel)]="editTxForm.payment_period" name="edit_payment_period" required style="width: 100%; background: rgba(4, 47, 36, 0.25); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 16px; padding: 0.95rem 1.25rem; color: #fff; font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none;">
+                  <option value="1_month">دفع شهر واحد</option>
+                  <option value="3_months">ثلاثة شهور</option>
+                </select>
+                <span style="font-size: 0.6rem; color: var(--primary); position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); pointer-events: none;">▼</span>
+              </div>
+            </div>
             
             <div class="form-group full-width">
               <label>إجمالي القيمة الجديدة</label>
@@ -218,6 +281,35 @@ import Swal from 'sweetalert2';
     .actions-header { display: flex; gap: 1rem; align-self: center; }
 
     .table-container { margin-top: 1rem; }
+    
+    .badge-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      
+      &.advance {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: rgba(212, 175, 55, 0.2);
+        color: var(--primary);
+      }
+      
+      &.normal {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
+        color: var(--accent);
+      }
+      
+      .period-text {
+        font-size: 0.75rem;
+        opacity: 0.8;
+      }
+    }
+
     .tx-number-cell { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--primary); font-weight: 800; }
     .date-cell { color: var(--text-muted); font-size: 0.85rem; }
     .text-success { color: var(--success) !important; }
@@ -310,6 +402,13 @@ import Swal from 'sweetalert2';
       th { font-weight: 900 !important; background: #f2f2f2 !important; }
       .font-bold { font-weight: bold !important; color: #000 !important; }
       .text-success, .text-accent { color: #000 !important; }
+      .badge-type {
+        border: none !important;
+        background: transparent !important;
+        color: #000 !important;
+        padding: 0 !important;
+        font-weight: normal !important;
+      }
     }
 
     @media (max-width: 768px) {
@@ -353,7 +452,9 @@ export class TransactionsComponent implements OnInit {
   newTx = {
     gram_price: 3500,
     grams: '' as string | number,
-    amount: 0
+    amount: 0,
+    payment_type: 'normal' as 'advance' | 'normal',
+    payment_period: '1_month' as '1_month' | '3_months' | null
   };
 
   // Edit transaction form models
@@ -361,7 +462,9 @@ export class TransactionsComponent implements OnInit {
   editTxForm = {
     gram_price: 0,
     grams: '' as string | number,
-    amount: 0
+    amount: 0,
+    payment_type: 'normal' as 'advance' | 'normal',
+    payment_period: '1_month' as '1_month' | '3_months' | null
   };
 
   ngOnInit() {
@@ -416,7 +519,9 @@ export class TransactionsComponent implements OnInit {
       user_id: this.userId,
       gram_price: Number(this.newTx.gram_price),
       grams: Number(this.newTx.grams),
-      amount: Number(this.newTx.amount)
+      amount: Number(this.newTx.amount),
+      payment_type: this.newTx.payment_type,
+      payment_period: this.newTx.payment_type === 'normal' ? this.newTx.payment_period : null
     };
 
     const { error } = await this.dataService.addApprovedTransaction(txData);
@@ -431,7 +536,13 @@ export class TransactionsComponent implements OnInit {
         showConfirmButton: false
       });
       this.showAddModal = false;
-      this.newTx = { gram_price: 3500, grams: '', amount: 0 };
+      this.newTx = {
+        gram_price: 3500,
+        grams: '',
+        amount: 0,
+        payment_type: 'normal',
+        payment_period: '1_month'
+      };
       await this.loadTxs();
     }
     this.saving = false;
@@ -442,7 +553,9 @@ export class TransactionsComponent implements OnInit {
     this.editTxForm = {
       gram_price: tx.gram_price,
       grams: tx.grams,
-      amount: tx.amount
+      amount: tx.amount,
+      payment_type: tx.payment_type || 'normal',
+      payment_period: tx.payment_period || null
     };
     this.showEditModal = true;
   }
@@ -457,7 +570,9 @@ export class TransactionsComponent implements OnInit {
     const updates = {
       gram_price: Number(this.editTxForm.gram_price),
       grams: Number(this.editTxForm.grams),
-      amount: Number(this.editTxForm.amount)
+      amount: Number(this.editTxForm.amount),
+      payment_type: this.editTxForm.payment_type,
+      payment_period: this.editTxForm.payment_type === 'normal' ? this.editTxForm.payment_period : null
     };
 
     const { error } = await this.dataService.updateApprovedTransaction(this.editingTx.id, updates);

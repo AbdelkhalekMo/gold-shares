@@ -2,7 +2,6 @@ import { Injectable, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { SupabaseService } from './supabase.service';
 import { User } from '../interfaces/models.interface';
-import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +26,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<boolean> {
+    const Swal = (await import('sweetalert2')).default;
     try {
       const { data, error } = await this.supabaseSvc.client
         .from('users')
@@ -119,7 +119,7 @@ export class AuthService {
 
     const { data, error } = await this.supabaseSvc.client
       .from('users')
-      .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at')
+      .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at, gift, initial_advance, initial_remaining')
       .eq('id', current.id)
       .single();
 

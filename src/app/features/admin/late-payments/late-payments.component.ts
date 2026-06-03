@@ -31,6 +31,8 @@ import { getCairoDate } from '../../../core/utils/date-utils';
               <tr>
                 <th>المشترك</th>
                 <th>نوع الحصة</th>
+                <th>المقدم</th>
+                <th>الهدية</th>
                 <th>المتبقي الحالي</th>
                 <th>الحد الأقصى المسموح</th>
                 <th>حالة الامتثال</th>
@@ -45,10 +47,12 @@ import { getCairoDate } from '../../../core/utils/date-utils';
                   </div>
                 </td>
                 <td>
-                  <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                    {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+                  <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : (user.share_type === 'half' ? 'emerald' : 'purple')">
+                    {{ user.share_type === 'full' ? 'سهم كامل' : (user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
                   </span>
                 </td>
+                <td class="font-bold text-accent">{{ user.advance }} جم</td>
+                <td class="font-bold text-warning">{{ user.gift || 0 }} جم</td>
                 <td class="text-danger font-bold">{{ user.remaining }} جم</td>
                 <td class="text-accent font-bold">{{ user.expected }} جم</td>
                 <td>
@@ -65,10 +69,15 @@ import { getCairoDate } from '../../../core/utils/date-utils';
             <div class="card-header-late">
               <div class="user-cell">
                 <div class="user-avatar">{{ user.username.charAt(0) }}</div>
-                <span class="username">{{ user.username }}</span>
+                <div style="display: flex; flex-direction: column; gap: 0.1rem;">
+                  <span class="username">{{ user.username }}</span>
+                  <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);">
+                    المقدم: {{ user.advance }} جم | الهدية: {{ user.gift || 0 }} جم
+                  </span>
+                </div>
               </div>
-              <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : 'emerald'">
-                {{ user.share_type === 'full' ? 'سهم كامل' : 'نصف سهم' }}
+              <span class="badge-modern" [ngClass]="user.share_type === 'full' ? 'gold' : (user.share_type === 'half' ? 'emerald' : 'purple')">
+                {{ user.share_type === 'full' ? 'سهم كامل' : (user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
               </span>
             </div>
             
@@ -121,6 +130,7 @@ import { getCairoDate } from '../../../core/utils/date-utils';
       padding: 0.4rem 1.2rem; border-radius: 100px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase;
       &.gold { background: rgba(212, 175, 55, 0.1); color: var(--primary); border: 1px solid var(--primary); }
       &.emerald { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid var(--accent); }
+      &.purple { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid #8b5cf6; }
       &.danger-glow { background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid #ff4d4d; box-shadow: 0 0 15px rgba(255, 77, 77, 0.2); }
     }
 
@@ -263,13 +273,13 @@ export class LatePaymentsComponent implements OnInit {
     this.lateUsers = data
       .filter((user: any) => user.role === 'user')
       .filter((user: any) => {
-        const isFull = user.share_type === 'full';
-        const expectedReduction = periods * (isFull ? 1 : 0.5);
-        const initialRemaining = isFull ? 28 : 14;
+        const initialRemaining = Number(user.initial_remaining || 0);
+        // Genaralized expected payment calculation: 1g per 3 months for full share (28g total initial remaining)
+        const expectedReduction = periods * (initialRemaining / 28.0);
         const expectedRemaining = initialRemaining - expectedReduction;
 
         if (Number(user.remaining) > expectedRemaining) {
-          user.expected = expectedRemaining;
+          user.expected = Math.round(expectedRemaining * 100) / 100;
           return true;
         }
         return false;

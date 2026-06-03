@@ -29,6 +29,8 @@ import { DataService } from '../../../core/services/data.service';
               <thead>
                 <tr>
                   <th>المشترك</th>
+                  <th>المقدم</th>
+                  <th>الهدية</th>
                   <th>التخصص المهني</th>
                   <th>محل الإقامة</th>
                   <th>صافي الدخل</th>
@@ -45,6 +47,8 @@ import { DataService } from '../../../core/services/data.service';
                       <span class="username">{{ p.full_name }}</span>
                     </div>
                   </td>
+                  <td class="font-bold text-accent">{{ p.user?.advance || '---' }} <span *ngIf="p.user">جم</span></td>
+                  <td class="font-bold text-warning">{{ p.user?.gift || 0 }} <span *ngIf="p.user">جم</span></td>
                   <td class="job-cell">{{ p.job || '---' }}</td>
                   <td>{{ p.address }}</td>
                   <td class="text-accent font-bold">{{ p.avg_net_income | number }} <small>ج.م</small></td>
@@ -70,6 +74,9 @@ import { DataService } from '../../../core/services/data.service';
                   <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
                   <div class="user-meta">
                     <span class="username">{{ p.full_name }}</span>
+                    <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);" *ngIf="p.user">
+                      المقدم: {{ p.user.advance }} جم | الهدية: {{ p.user.gift || 0 }} جم
+                    </span>
                     <span class="date">{{ p.created_at | date:'yyyy-MM-dd':'Africa/Cairo' }}</span>
                   </div>
                 </div>

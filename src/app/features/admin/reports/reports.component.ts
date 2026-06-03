@@ -120,6 +120,59 @@ interface UserStatement {
         </div>
       </div>
 
+      <!-- Advance Payments Tracker Card (Screen only) -->
+      <div class="card glass-card advance-tracker animate-spring">
+        <div class="card-glow"></div>
+        <div class="tracker-header">
+          <span class="icon">💎</span>
+          <div class="tracker-title-wrap">
+            <h2>متابعة سداد مقدمات الأعضاء</h2>
+            <p>مراقبة حية للأعضاء الذين سددوا دفعة المقدم المطلوبة</p>
+          </div>
+          <div class="tracker-counter">
+            <span class="numerator">{{ getAdvancePaidCount() }}</span>
+            <span class="divider">/</span>
+            <span class="denominator">{{ users.length }}</span>
+            <span class="label">أعضاء</span>
+          </div>
+        </div>
+
+        <div class="tracker-progress">
+          <div class="progress-bar-fill" [style.width.%]="(getAdvancePaidCount() / (users.length || 1)) * 100"></div>
+        </div>
+
+        <div class="tracker-lists">
+          <div class="tracker-column unpaid">
+            <h3>⚠️ لم يسددوا المقدم بعد ({{ users.length - getAdvancePaidCount() }})</h3>
+            <div class="unpaid-users-scroll">
+              <div class="user-strip-badge" *ngFor="let u of getUnpaidAdvanceUsers()">
+                <span class="user-dot red"></span>
+                <span class="name">{{ u.username }}</span>
+                <span class="badge-mini text-alert" [class.gold]="u.share_type === 'full'" [class.emerald]="u.share_type === 'half'" [class.purple]="u.share_type === 'custom'">
+                  {{ u.share_type === 'full' ? 'كامل' : (u.share_type === 'half' ? 'نصف' : 'مخصص') }} (المتبقي: {{ getRemainingCashAdvance(u) }} جم | هدية: {{ u.gift || 0 }} جم)
+                </span>
+              </div>
+              <div class="empty-list-text" *ngIf="users.length === getAdvancePaidCount()">
+                🎉 ممتاز! الجميع قام بسداد دفعة المقدم.
+              </div>
+            </div>
+          </div>
+
+          <div class="tracker-column paid">
+            <h3>✅ تم سداد المقدم ({{ getAdvancePaidCount() }})</h3>
+            <div class="paid-users-scroll">
+              <div class="user-strip-badge" *ngFor="let u of getPaidAdvanceUsers()">
+                <span class="user-dot green"></span>
+                <span class="name">{{ u.username }}</span>
+                <span class="badge-mini" [class.gold]="u.share_type === 'full'" [class.emerald]="u.share_type === 'half'" [class.purple]="u.share_type === 'custom'">
+                  {{ u.share_type === 'full' ? 'كامل' : (u.share_type === 'half' ? 'نصف' : 'مخصص') }} (تم السداد | هدية: {{ u.gift || 0 }} جم)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Screen Layout: Compact Summary Table -->
       <div class="table-section" *ngIf="userStatements.length > 0">
         <div class="table-header-row">
@@ -135,6 +188,8 @@ interface UserStatement {
                 </th>
                 <th>المساهم</th>
                 <th>نوع السهم</th>
+                <th>المقدم</th>
+                <th>الهدية</th>
                 <th>مدفوعات الفترة</th>
                 <th>وزن الذهب بالفترة</th>
                 <th>المدفوع الكلي</th>
@@ -153,7 +208,13 @@ interface UserStatement {
                     <span class="user-email">{{ row.user.email }}</span>
                   </div>
                 </td>
-                <td><span class="share-badge">{{ row.user.share_type }}</span></td>
+                <td>
+                  <span class="share-badge" [class.gold]="row.user.share_type === 'full'" [class.emerald]="row.user.share_type === 'half'" [class.purple]="row.user.share_type === 'custom'">
+                    {{ row.user.share_type === 'full' ? 'سهم كامل' : (row.user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
+                  </span>
+                </td>
+                <td class="font-bold text-accent">{{ row.user.advance }} جم</td>
+                <td class="font-bold text-warning">{{ row.user.gift || 0 }} جم</td>
                 <td class="font-bold text-accent">{{ row.totalAmount | number:'1.0-2' }} ج.م</td>
                 <td class="font-bold text-gradient-gold">{{ row.totalGrams | number:'1.0-3' }} جرام</td>
                 <td>{{ row.overallPaid | number:'1.0-2' }} ج.م</td>
@@ -169,6 +230,52 @@ interface UserStatement {
           </table>
         </div>
 
+        <!-- Mobile Card Layout (visible only on ≤576px via CSS) -->
+        <div class="mobile-cards-list">
+          <div class="mobile-user-card" *ngFor="let row of pagedStatements">
+            <div class="mc-header">
+              <input class="mc-checkbox" type="checkbox" [(ngModel)]="row.selected" (change)="cdr.markForCheck()">
+              <div class="mc-user">
+                <div class="mc-name">{{ row.user.username }}</div>
+                <div class="mc-email">{{ row.user.email }}</div>
+              </div>
+              <span class="share-badge" [class.gold]="row.user.share_type === 'full'" [class.emerald]="row.user.share_type === 'half'" [class.purple]="row.user.share_type === 'custom'">
+                {{ row.user.share_type === 'full' ? 'كامل' : (row.user.share_type === 'half' ? 'نصف' : 'مخصص') }}
+              </span>
+            </div>
+            <div class="mc-stats-grid">
+              <div class="mc-stat">
+                <div class="mc-stat-label">المقدم</div>
+                <div class="mc-stat-value text-accent">{{ row.user.advance }} جم</div>
+              </div>
+              <div class="mc-stat">
+                <div class="mc-stat-label">الهدية</div>
+                <div class="mc-stat-value text-warning">{{ row.user.gift || 0 }} جم</div>
+              </div>
+              <div class="mc-stat">
+                <div class="mc-stat-label">مدفوعات الفترة</div>
+                <div class="mc-stat-value text-accent">{{ row.totalAmount | number:'1.0-2' }} ج.م</div>
+              </div>
+              <div class="mc-stat">
+                <div class="mc-stat-label">وزن الفترة</div>
+                <div class="mc-stat-value text-gradient-gold">{{ row.totalGrams | number:'1.0-3' }} جم</div>
+              </div>
+              <div class="mc-stat">
+                <div class="mc-stat-label">المدفوع الكلي</div>
+                <div class="mc-stat-value">{{ row.overallPaid | number:'1.0-2' }} ج.م</div>
+              </div>
+              <div class="mc-stat">
+                <div class="mc-stat-label">المتبقي الكلي</div>
+                <div class="mc-stat-value text-alert">{{ row.overallRemaining | number:'1.0-2' }} ج.م</div>
+              </div>
+            </div>
+            <div class="mc-actions">
+              <button class="btn-action btn-view" (click)="viewStatementDetails(row)">👁️ معاينة</button>
+              <button class="btn-action btn-print" (click)="printSingle(row)">🖨️ طباعة</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Pagination Controls -->
         <div class="pagination-container" *ngIf="totalPages > 1">
           <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">« السابق</button>
@@ -176,6 +283,7 @@ interface UserStatement {
           <button class="btn-page" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">التالي »</button>
         </div>
       </div>
+
 
       <!-- No Data State -->
       <div class="card glass-card empty-state" *ngIf="userStatements.length === 0">
@@ -227,11 +335,21 @@ interface UserStatement {
                 </div>
                 <div class="info-item">
                   <span class="label">نوع السهم / الاشتراك:</span>
-                  <span class="value">{{ previewStatement.user.share_type }}</span>
+                  <span class="value">
+                    {{ previewStatement.user.share_type === 'full' ? 'سهم كامل' : (previewStatement.user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
+                  </span>
                 </div>
                 <div class="info-item">
                   <span class="label">تاريخ الانضمام:</span>
                   <span class="value">{{ previewStatement.user.created_at | date:'yyyy-MM-dd':'Africa/Cairo' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">مقدم السهم:</span>
+                  <span class="value">{{ previewStatement.user.advance }} جم</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">الهدية المقدمة:</span>
+                  <span class="value">{{ previewStatement.user.gift || 0 }} جم</span>
                 </div>
               </div>
             </div>
@@ -278,6 +396,7 @@ interface UserStatement {
                   <thead>
                     <tr>
                       <th>رقم المعاملة</th>
+                      <th>نوع الدفع</th>
                       <th>التاريخ والوقت</th>
                       <th>سعر جرام عيار 21 اليومي</th>
                       <th>الوزن المشترى</th>
@@ -287,6 +406,11 @@ interface UserStatement {
                   <tbody>
                     <tr *ngFor="let tx of previewStatement.transactions">
                       <td><code class="tx-num">{{ tx.transaction_number || 'N/A' }}</code></td>
+                      <td>
+                        <span class="badge-type" [class.advance]="tx.payment_type === 'advance'" [class.normal]="tx.payment_type !== 'advance'">
+                          {{ tx.payment_type === 'advance' ? '💎 مقدم' : (tx.payment_period === '3_months' ? '📈 3 شهور' : '📈 دفع شهر') }}
+                        </span>
+                      </td>
                       <td>{{ tx.created_at | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }}</td>
                       <td>{{ tx.gram_price | number:'1.0-0' }} ج.م</td>
                       <td class="font-bold text-gradient-gold">{{ tx.grams }} جرام</td>
@@ -347,6 +471,22 @@ interface UserStatement {
 
         <div class="divider"></div>
 
+        <!-- Association Gold Target Summary (At the top of accountant sheet) -->
+        <div class="print-association-summary">
+          <div class="summary-box-item required">
+            <span class="label">إجمالي الجرامات المطلوبة للوصول (المستهدف)</span>
+            <span class="value">{{ associationTotalRequired | number:'1.0-3' }} <small>جم</small></span>
+          </div>
+          <div class="summary-box-item collected">
+            <span class="label">إجمالي الجرامات التي تم جمعها</span>
+            <span class="value">{{ associationTotalCollected | number:'1.0-3' }} <small>جم</small></span>
+          </div>
+          <div class="summary-box-item remaining">
+            <span class="label">إجمالي الجرامات المتبقية الكلية</span>
+            <span class="value">{{ associationTotalRemaining | number:'1.0-3' }} <small>جم</small></span>
+          </div>
+        </div>
+
         <!-- Ledger Table -->
         <div class="table-container-print">
           <table class="print-table accountant-table">
@@ -354,33 +494,43 @@ interface UserStatement {
               <tr>
                 <th>اسم المساهم</th>
                 <th>نوع السهم</th>
-                <th>مدفوعات الفترة</th>
-                <th>وزن الذهب بالفترة</th>
-                <th>المدفوع الكلي</th>
-                <th>الرصيد الكلي بالذهب</th>
-                <th>المتبقي المطلوب</th>
+                <th>دفع المقدم؟</th>
+                <th>حالة الاستلام</th>
+                <th>الجرامات المدفوعة</th>
+                <th>الجرامات المتبقية</th>
+                <th>مدفوعات الفترة (ج.م)</th>
+                <th>وزن الذهب بالفترة (جم)</th>
               </tr>
             </thead>
             <tbody>
               <ng-container *ngFor="let row of userStatements">
                 <tr *ngIf="row.selected">
-                  <td class="font-bold">{{ row.user.username }}</td>
-                  <td>{{ row.user.share_type }}</td>
-                  <td class="font-bold">{{ row.totalAmount | number:'1.0-2' }} ج.م</td>
-                  <td class="font-bold">{{ row.totalGrams | number:'1.0-3' }} جرام</td>
-                  <td>{{ row.overallPaid | number:'1.0-2' }} ج.م</td>
-                  <td>{{ row.overallGrams | number:'1.0-3' }} جرام</td>
-                  <td class="font-bold text-danger">{{ row.overallRemaining | number:'1.0-2' }} ج.م</td>
+                   <td class="font-bold">
+                     <div>{{ row.user.username }}</div>
+                     <div style="font-size: 8pt; font-weight: normal; color: #444;">
+                       المقدم: {{ row.user.advance }} جم | الهدية: {{ row.user.gift || 0 }} جم
+                     </div>
+                   </td>
+                  <td>{{ row.user.share_type === 'full' ? 'سهم كامل' : (row.user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}</td>
+                  <td class="font-bold">
+                    {{ hasPaidAdvance(row) ? '🟢 نعم' : '🔴 لا' }}
+                  </td>
+                  <td class="font-bold">
+                    {{ row.user.isReceived ? '🟢 تم الاستلام' : '🔴 لم يستلم' }}
+                  </td>
+                  <td class="font-bold">{{ row.user.paid | number:'1.0-3' }} جم</td>
+                  <td class="font-bold text-danger">{{ row.user.remaining }} جم</td>
+                  <td>{{ row.totalAmount | number:'1.0-2' }} ج.م</td>
+                  <td>{{ row.totalGrams | number:'1.0-3' }} جرام</td>
                 </tr>
               </ng-container>
               <!-- Totals Row -->
               <tr class="totals-row">
-                <td colspan="2" class="font-bold">الإجمالي المجموع</td>
+                <td colspan="4" class="font-bold">الإجمالي المجموع للأعضاء المحددين</td>
+                <td class="font-bold">{{ getSelectedTotalPaidGrams() | number:'1.0-3' }} جم</td>
+                <td class="font-bold text-danger">{{ getSelectedTotalRemainingGrams() | number:'1.0-2' }} جم</td>
                 <td class="font-bold">{{ getSelectedTotalAmount() | number:'1.0-2' }} ج.م</td>
                 <td class="font-bold">{{ getSelectedTotalGrams() | number:'1.0-3' }} جرام</td>
-                <td class="font-bold">{{ getSelectedOverallPaid() | number:'1.0-2' }} ج.م</td>
-                <td class="font-bold">{{ getSelectedOverallGrams() | number:'1.0-3' }} جرام</td>
-                <td class="font-bold text-danger">{{ getSelectedOverallRemaining() | number:'1.0-2' }} ج.م</td>
               </tr>
             </tbody>
           </table>
@@ -438,11 +588,21 @@ interface UserStatement {
             </div>
             <div class="info-item">
               <span class="label">نوع السهم / الاشتراك:</span>
-              <span class="value">{{ statement.user.share_type }}</span>
+              <span class="value">
+                {{ statement.user.share_type === 'full' ? 'سهم كامل' : (statement.user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
+              </span>
             </div>
             <div class="info-item">
               <span class="label">تاريخ الانضمام:</span>
               <span class="value">{{ statement.user.created_at | date:'yyyy-MM-dd':'Africa/Cairo' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">مقدم السهم:</span>
+              <span class="value">{{ statement.user.advance }} جم</span>
+            </div>
+            <div class="info-item">
+              <span class="label">الهدية المقدمة:</span>
+              <span class="value">{{ statement.user.gift || 0 }} جم</span>
             </div>
           </div>
         </div>
@@ -492,6 +652,7 @@ interface UserStatement {
               <thead>
                 <tr>
                   <th>رقم المعاملة</th>
+                  <th>نوع الدفع</th>
                   <th>التاريخ والوقت</th>
                   <th>سعر جرام عيار 21 اليومي</th>
                   <th>الوزن المشترى</th>
@@ -501,6 +662,11 @@ interface UserStatement {
               <tbody>
                 <tr *ngFor="let tx of statement.transactions">
                   <td><code>{{ tx.transaction_number || 'N/A' }}</code></td>
+                  <td>
+                    <span class="badge-type" [class.advance]="tx.payment_type === 'advance'" [class.normal]="tx.payment_type !== 'advance'">
+                      {{ tx.payment_type === 'advance' ? '💎 مقدم' : (tx.payment_period === '3_months' ? '📈 3 شهور' : '📈 دفع شهر') }}
+                    </span>
+                  </td>
                   <td>{{ tx.created_at | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }}</td>
                   <td>{{ tx.gram_price | number:'1.0-0' }} ج.م</td>
                   <td class="font-bold">{{ tx.grams }} جرام</td>
@@ -1026,6 +1192,34 @@ interface UserStatement {
       color: var(--primary);
     }
 
+    .badge-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      
+      &.advance {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: rgba(212, 175, 55, 0.2);
+        color: var(--primary);
+      }
+      
+      &.normal {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
+        color: var(--accent);
+      }
+      
+      .period-text {
+        font-size: 0.75rem;
+        opacity: 0.8;
+      }
+    }
+
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -1185,7 +1379,7 @@ interface UserStatement {
         border-radius: 0 !important;
         padding: 8px !important;
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-columns: repeat(3, 1fr) !important;
         gap: 8px !important;
       }
 
@@ -1234,6 +1428,14 @@ interface UserStatement {
 
       .summary-row.text-alert, .summary-row.text-alert .highlight-val {
         color: #000 !important;
+      }
+
+      .badge-type {
+        border: none !important;
+        background: transparent !important;
+        color: #000 !important;
+        padding: 0 !important;
+        font-weight: bold !important;
       }
 
       .table-container-print {
@@ -1328,44 +1530,486 @@ interface UserStatement {
       }
     }
 
-    @media (max-width: 768px) {
-      .filters-grid {
-        grid-template-columns: 1fr;
-      }
-      .actions-container {
-        justify-content: center;
-        flex-direction: column;
+    /* Mobile card list: hidden by default, visible only via 576px query */
+    .mobile-cards-list { display: none; }
+
+    /* =============================================
+       TABLE CONTAINER (Screen)
+    ============================================= */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(212, 175, 55, 0.1);
+      -webkit-overflow-scrolling: touch;
+
+      table {
         width: 100%;
-        
-        button {
-          width: 100%;
+        border-collapse: collapse;
+        min-width: 860px;
+
+        th {
+          position: sticky;
+          top: 0;
+          background: rgba(10, 15, 30, 0.98);
+          color: var(--primary);
+          font-size: 0.82rem;
+          font-weight: 800;
+          padding: 1rem 0.85rem;
+          text-align: right;
+          white-space: nowrap;
+          border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+          z-index: 2;
+        }
+
+        td {
+          padding: 0.9rem 0.85rem;
+          font-size: 0.85rem;
+          color: #e2e8f0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+          vertical-align: middle;
+        }
+
+        tbody tr {
+          transition: background 0.15s ease;
+          &:hover {
+            background: rgba(212, 175, 55, 0.04);
+          }
+          &:last-child td {
+            border-bottom: none;
+          }
         }
       }
+    }
+
+    /* =============================================
+       RESPONSIVE — 768px (Tablet)
+    ============================================= */
+    @media (max-width: 768px) {
+      .reports-page { padding: 1rem 0; }
+
+      .page-header { margin-bottom: 1.5rem; }
+      .subtitle { font-size: 0.92rem; }
+
+      .filter-panel { padding: 1.5rem; border-radius: 20px; }
+      .filters-grid { grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+
+      .actions-container {
+        justify-content: stretch;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .actions-container button {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.88rem;
+        position: relative;
+        z-index: 5;
+      }
+
       .table-header-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
+        margin-bottom: 1rem;
       }
+      .section-title { font-size: 1.1rem; }
+
       .action-buttons-cell {
-        flex-direction: column;
-        gap: 0.25rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.4rem;
       }
+      .btn-action { padding: 0.45rem 0.7rem; font-size: 0.78rem; }
+
       .modal-card {
         padding: 1.25rem !important;
-        border-radius: 25px;
+        border-radius: 22px;
+        max-height: 95vh;
       }
+      .modal-header h2 { font-size: 1.15rem; }
+      .scrollable-content { max-height: 60vh; }
+
       .statement-print-header {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        
-        .statement-meta {
-          text-align: center;
-          margin-top: 1rem;
+        gap: 0.75rem;
+        .statement-meta { text-align: center; margin-top: 0.5rem; }
+      }
+
+      .info-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 1rem; }
+      .summary-cards { grid-template-columns: 1fr; gap: 1rem; }
+
+      .table-container-modal {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        .modal-table { min-width: 550px; }
+      }
+
+      .advance-tracker { padding: 1.5rem; border-radius: 22px; }
+      .tracker-lists { grid-template-columns: 1fr; gap: 1.5rem; }
+
+      .pagination-container { gap: 0.75rem; flex-wrap: wrap; }
+      .btn-page { padding: 0.45rem 0.85rem; font-size: 0.82rem; }
+    }
+
+    /* =============================================
+       RESPONSIVE — 576px (Mobile)
+    ============================================= */
+    @media (max-width: 576px) {
+      .filter-panel { padding: 1rem; border-radius: 16px; margin-bottom: 1.5rem; }
+
+      .page-header h1 { font-size: 1.4rem !important; }
+      .subtitle { font-size: 0.85rem; }
+
+      /* Hide the standard table on mobile & show card layout */
+      .table-container {
+        border-radius: 0;
+        background: transparent;
+        border: none;
+        overflow: visible;
+
+        table { display: none; }
+      }
+
+      /* Show mobile card list */
+      .mobile-cards-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+
+      .mobile-user-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(212, 175, 55, 0.12);
+        border-radius: 20px;
+        padding: 1.1rem 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        transition: all 0.2s ease;
+
+        &:active { transform: scale(0.985); }
+
+        .mc-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+
+          .mc-checkbox { width: 20px; height: 20px; accent-color: var(--primary); }
+
+          .mc-user {
+            flex: 1;
+            .mc-name { font-size: 0.98rem; font-weight: 800; color: #fff; }
+            .mc-email { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+          }
+        }
+
+        .mc-badge-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+
+        .mc-stats-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.5rem;
+
+          .mc-stat {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 0.5rem 0.75rem;
+
+            .mc-stat-label {
+              font-size: 0.68rem;
+              color: var(--text-muted);
+              margin-bottom: 0.15rem;
+            }
+            .mc-stat-value {
+              font-size: 0.88rem;
+              font-weight: 800;
+              color: #fff;
+            }
+          }
+        }
+
+        .mc-actions {
+          display: flex;
+          gap: 0.5rem;
+          .btn-action { flex: 1; justify-content: center; padding: 0.6rem; font-size: 0.82rem; }
         }
       }
-      .summary-cards {
-        grid-template-columns: 1fr;
+
+      /* Modal full-screen on mobile */
+      .modal-backdrop { padding: 0; align-items: flex-end; }
+      .modal-card {
+        border-radius: 28px 28px 0 0 !important;
+        max-height: 92vh;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 1.25rem !important;
+      }
+      .close-modal-btn { top: 1rem; right: 1rem; }
+      .modal-header { padding-right: 2.5rem; }
+      .modal-header h2 { font-size: 1rem; }
+      .scrollable-content { max-height: 62vh; padding-right: 0; }
+
+      .info-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+      .summary-mini-card { padding: 0.9rem; }
+
+      .table-container-modal {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+        .modal-table {
+          min-width: 520px;
+          th, td { padding: 0.6rem 0.75rem; font-size: 0.75rem; }
+        }
+      }
+
+      .modal-footer {
+        flex-direction: column;
+        button { width: 100%; justify-content: center; }
+      }
+
+      /* Advance tracker */
+      .advance-tracker { padding: 1rem; border-radius: 16px; }
+      .tracker-lists { grid-template-columns: 1fr !important; gap: 1rem; }
+      .tracker-header { gap: 0.75rem; }
+      .tracker-counter { padding: 0.4rem 0.9rem; }
+
+      /* Pagination */
+      .pagination-container { gap: 0.5rem; }
+      .btn-page { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+      .page-indicator { font-size: 0.82rem; }
+
+      /* Empty state */
+      .empty-state { padding: 2.5rem 1rem; }
+      .empty-state h3 { font-size: 1.1rem; }
+    }
+
+    /* Advance Tracker Styles */
+    .advance-tracker {
+      margin-bottom: 2.5rem;
+      padding: 2.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      border-radius: 30px;
+      position: relative;
+      overflow: hidden;
+
+      .tracker-header {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+
+        .icon {
+          font-size: 2.2rem;
+          background: rgba(212, 175, 55, 0.1);
+          width: 60px;
+          height: 60px;
+          border-radius: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          box-shadow: 0 8px 20px rgba(212, 175, 55, 0.05);
+        }
+
+        .tracker-title-wrap {
+          flex: 1;
+          min-width: 200px;
+          h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 0 0.25rem 0;
+            font-family: 'Tajawal', sans-serif;
+          }
+          p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin: 0;
+          }
+        }
+
+        .tracker-counter {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          padding: 0.5rem 1.25rem;
+          border-radius: 100px;
+
+          .numerator {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent);
+          }
+          .divider {
+            color: var(--text-muted);
+            opacity: 0.5;
+            font-size: 1.1rem;
+          }
+          .denominator {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+          }
+          .label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+            font-weight: 700;
+          }
+        }
+      }
+
+      .tracker-progress {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+
+        .progress-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, var(--primary), var(--accent));
+          border-radius: 10px;
+          transition: width 0.8s ease;
+        }
+      }
+
+      .tracker-lists {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+
+      .tracker-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        h3 {
+          font-size: 0.95rem;
+          font-weight: 800;
+          margin: 0;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        &.unpaid h3 { color: #ff4d4d; }
+        &.paid h3 { color: var(--accent); }
+
+        .unpaid-users-scroll, .paid-users-scroll {
+          max-height: 200px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          padding-right: 0.25rem;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+          &::-webkit-scrollbar { width: 4px; }
+          &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        }
+
+        .user-strip-badge {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          padding: 0.6rem 1rem;
+          border-radius: 12px;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.04);
+          }
+
+          .user-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            &.red { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; }
+            &.green { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+          }
+
+          .name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #fff;
+            flex: 1;
+          }
+
+          .badge-mini {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            
+            &.gold { background: rgba(212, 175, 55, 0.1); color: var(--primary); border: 1px solid rgba(212, 175, 55, 0.2); }
+            &.emerald { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.2); }
+          }
+        }
+
+        .empty-list-text {
+          font-size: 0.88rem;
+          color: var(--text-muted);
+          text-align: center;
+          padding: 1.5rem;
+          border: 1px dashed rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          background: rgba(16, 185, 129, 0.02);
+          color: var(--accent);
+          font-weight: 700;
+        }
+      }
+    }
+
+    @media print {
+      .print-association-summary {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 15px !important;
+        margin: 15px 0 !important;
+        page-break-inside: avoid !important;
+      }
+      
+      .summary-box-item {
+        flex: 1 !important;
+        border: 1.5px solid #000 !important;
+        padding: 10px !important;
+        text-align: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        
+        .label {
+          font-size: 8.5pt !important;
+          font-weight: bold !important;
+          color: #333 !important;
+        }
+        .value {
+          font-size: 13pt !important;
+          font-weight: 900 !important;
+          color: #000 !important;
+          
+          small {
+            font-size: 9.5pt !important;
+          }
+        }
       }
     }
   `]
@@ -1377,6 +2021,11 @@ export class ReportsComponent implements OnInit {
   users: any[] = [];
   allTransactions: any[] = [];
   userStatements: UserStatement[] = [];
+
+  // Association Gold stats variables
+  associationTotalRequired = 0;
+  associationTotalCollected = 0;
+  associationTotalRemaining = 0;
 
   // Filter States
   selectedUserId: string = 'all';
@@ -1436,13 +2085,36 @@ export class ReportsComponent implements OnInit {
   }
 
   async loadInitialData() {
-    const [usersRes, txsRes] = await Promise.all([
+    const [usersRes, txsRes, settingsRes] = await Promise.all([
       this.dataService.getUsers(),
-      this.dataService.getApprovedTransactions()
+      this.dataService.getApprovedTransactions(),
+      this.dataService.getAssociationSettings()
     ]);
 
     this.users = (usersRes.data || []).filter(u => u.role === 'user');
     this.allTransactions = txsRes.data || [];
+
+    const settings = settingsRes.data;
+    const fullTotal = settings ? Number(settings.full_share_total) : 31.5;
+    const halfTotal = fullTotal / 2.0;
+
+    // Calculate general association gold targets
+    this.associationTotalRequired = this.users.reduce((sum, u) => {
+      if (u.share_type === 'full') {
+        return sum + fullTotal;
+      } else if (u.share_type === 'half') {
+        return sum + halfTotal;
+      } else {
+        return sum + (Number(u.remaining || 0) + Number(u.paid || 0) + Number(u.advance || 0));
+      }
+    }, 0);
+
+    this.associationTotalCollected = this.allTransactions.reduce((sum, tx) => {
+      return sum + Number(tx.grams || 0);
+    }, 0);
+
+    const rem = this.associationTotalRequired - this.associationTotalCollected;
+    this.associationTotalRemaining = rem > 0 ? rem : 0;
 
     const currentYear = this.currentDate.getFullYear();
     const years = this.allTransactions.map(tx => getCairoDate(tx.created_at).getFullYear());
@@ -1518,10 +2190,7 @@ export class ReportsComponent implements OnInit {
         return matchesPeriod(txDate);
       });
       
-      // If listing all users, only include users who have transactions in that period
-      if (this.selectedUserId === 'all' && periodTxs.length === 0) {
-        continue;
-      }
+      // Include all members even if they have no transactions in the selected period
       
       const totalGrams = periodTxs.reduce((sum, tx) => sum + Number(tx.grams || 0), 0);
       const totalAmount = periodTxs.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
@@ -1657,5 +2326,54 @@ export class ReportsComponent implements OnInit {
     setTimeout(() => {
       window.print();
     }, 150);
+  }
+
+  // --- Advance Payment Helpers ---
+  getRemainingCashAdvance(u: any): number {
+    const advance = Number(u.advance || 0);
+    const initialAdvance = Number(u.initial_advance || 0);
+    const gift = Number(u.gift || 0);
+    const totalPaid = Number(u.paid || 0);
+
+    // 1. If total paid is enough to cover the cash advance, they owe 0 remaining cash advance.
+    const requiredCashAdvance = initialAdvance - gift;
+    if (totalPaid >= requiredCashAdvance) {
+      return 0;
+    }
+
+    // 2. Otherwise, check if advance is equal to initial_advance (meaning gift is not yet subtracted in the DB column)
+    if (advance === initialAdvance && gift > 0) {
+      return Math.max(0, advance - gift - totalPaid);
+    }
+
+    return Math.max(0, advance);
+  }
+
+  hasUserPaidAdvance(u: any): boolean {
+    return this.getRemainingCashAdvance(u) <= 0;
+  }
+
+  getAdvancePaidCount(): number {
+    return this.users.filter(u => this.hasUserPaidAdvance(u)).length;
+  }
+
+  getPaidAdvanceUsers(): any[] {
+    return this.users.filter(u => this.hasUserPaidAdvance(u));
+  }
+
+  getUnpaidAdvanceUsers(): any[] {
+    return this.users.filter(u => !this.hasUserPaidAdvance(u));
+  }
+
+  hasPaidAdvance(row: UserStatement): boolean {
+    return this.hasUserPaidAdvance(row.user);
+  }
+
+  getSelectedTotalPaidGrams(): number {
+    return this.userStatements.filter(s => s.selected).reduce((sum, s) => sum + Number(s.user.paid || 0), 0);
+  }
+
+  getSelectedTotalRemainingGrams(): number {
+    return this.userStatements.filter(s => s.selected).reduce((sum, s) => sum + Number(s.user.remaining || 0), 0);
   }
 }
