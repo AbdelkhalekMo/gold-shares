@@ -119,7 +119,7 @@ export class AuthService {
 
     const { data, error } = await this.supabaseSvc.client
       .from('users')
-      .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at, gift, initial_advance, initial_remaining')
+      .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at, gift, initial_advance, initial_remaining, member_code, expected_delivery_date, delivered_grams')
       .eq('id', current.id)
       .single();
 

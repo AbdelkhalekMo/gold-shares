@@ -46,6 +46,9 @@ import Swal from 'sweetalert2';
                       <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
                       <div style="display: flex; flex-direction: column; gap: 0.1rem;">
                         <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                        <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="tx.user?.member_code">
+                          رقم العضو: {{ tx.user?.member_code }}
+                        </span>
                         <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);" *ngIf="tx.user">
                           المقدم: {{ tx.user.advance }} جم | الهدية: {{ tx.user.gift || 0 }} جم
                         </span>
@@ -82,6 +85,9 @@ import Swal from 'sweetalert2';
                   <div class="user-avatar">{{ tx.user?.username?.charAt(0) || '?' }}</div>
                   <div class="user-meta">
                     <span class="username">{{ tx.user?.username || 'غير معروف' }}</span>
+                    <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="tx.user?.member_code">
+                      رقم العضو: {{ tx.user?.member_code }}
+                    </span>
                     <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);" *ngIf="tx.user">
                       المقدم: {{ tx.user.advance }} جم | الهدية: {{ tx.user.gift || 0 }} جم
                     </span>

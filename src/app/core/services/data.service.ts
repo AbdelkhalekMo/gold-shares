@@ -27,7 +27,7 @@ export class DataService {
   async getUsers() {
     return await this.supabaseSvc.client
       .from('users')
-      .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at, gift, initial_advance, initial_remaining')
+      .select('id, email, username, share_type, advance, remaining, paid, totalAmount, isReceived, role, created_at, gift, initial_advance, initial_remaining, delivered_grams, member_code, expected_delivery_date')
       .order('created_at', { ascending: false });
   }
 
@@ -53,7 +53,9 @@ export class DataService {
       totalAmount: 0,
       isReceived: false,
       role: userData.role || 'user',
-      gift: userData.gift || 0
+      gift: userData.gift || 0,
+      member_code: userData.member_code || null,
+      expected_delivery_date: userData.expected_delivery_date || null
     };
     return await this.supabaseSvc.client
       .from('users')
@@ -80,7 +82,7 @@ export class DataService {
   async getPendingTransactions(userId?: string) {
     let query = this.supabaseSvc.client
       .from('pending_transactions')
-      .select('*, user:users(username, advance, gift)');
+      .select('*, user:users(username, advance, gift, member_code)');
       
     if (userId) {
       query = query.eq('user_id', userId);
@@ -123,7 +125,7 @@ export class DataService {
       // Admin view - join with user name
       return await this.supabaseSvc.client
         .from('approved_transactions')
-        .select('id, user_id, gram_price, grams, amount, transaction_number, payment_type, payment_period, created_at, user:users!user_id(username, advance, gift)')
+        .select('id, user_id, gram_price, grams, amount, transaction_number, payment_type, payment_period, created_at, user:users!user_id(username, advance, gift, member_code)')
         .order('created_at', { ascending: false });
     }
   }
@@ -273,7 +275,7 @@ export class DataService {
   async getAllUserProfiles() {
     return await this.supabaseSvc.client
       .from('user_profiles')
-      .select('*, user:users(username, email, advance, gift)')
+      .select('*, user:users(username, email, advance, gift, member_code)')
       .order('created_at', { ascending: false });
   }
 

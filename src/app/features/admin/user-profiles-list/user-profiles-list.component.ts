@@ -43,8 +43,21 @@ import { DataService } from '../../../core/services/data.service';
                 <tr *ngFor="let p of profiles()">
                   <td>
                     <div class="user-cell">
-                      <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
-                      <span class="username">{{ p.full_name }}</span>
+                      <div class="user-avatar">{{ (p.user?.username || p.full_name)?.charAt(0) }}</div>
+                      <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                        <span class="username" style="font-weight: 800; color: #fff;">
+                          {{ p.user?.username || '---' }}
+                        </span>
+                        <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="p.user?.member_code">
+                          رقم العضو: {{ p.user?.member_code }}
+                        </span>
+                        <span class="full-name" style="font-size: 0.78rem; color: var(--primary);">
+                          الاسم بالملف: {{ p.full_name }}
+                        </span>
+                        <span class="user-email" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">
+                          {{ p.user?.email || '---' }}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td class="font-bold text-accent">{{ p.user?.advance || '---' }} <span *ngIf="p.user">جم</span></td>
@@ -71,9 +84,20 @@ import { DataService } from '../../../core/services/data.service';
             <div class="profile-card card glass-glow" *ngFor="let p of profiles()">
               <div class="card-header-profile">
                 <div class="user-cell">
-                  <div class="user-avatar">{{ p.full_name?.charAt(0) }}</div>
-                  <div class="user-meta">
-                    <span class="username">{{ p.full_name }}</span>
+                  <div class="user-avatar">{{ (p.user?.username || p.full_name)?.charAt(0) }}</div>
+                  <div class="user-meta" style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <span class="username" style="font-weight: 800; color: #fff;">
+                      {{ p.user?.username || '---' }}
+                    </span>
+                    <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="p.user?.member_code">
+                      رقم العضو: {{ p.user?.member_code }}
+                    </span>
+                    <span class="full-name" style="font-size: 0.75rem; color: var(--primary);">
+                      الاسم بالملف: {{ p.full_name }}
+                    </span>
+                    <span class="user-email" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;" *ngIf="p.user">
+                      {{ p.user.email }}
+                    </span>
                     <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);" *ngIf="p.user">
                       المقدم: {{ p.user.advance }} جم | الهدية: {{ p.user.gift || 0 }} جم
                     </span>

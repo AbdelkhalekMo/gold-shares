@@ -48,12 +48,28 @@ import Swal from 'sweetalert2';
                   <input type="text" formControlName="full_name" placeholder="الاسم الرباعي">
                 </div>
                 <div class="form-group">
+                  <label>رقم الشخص (الرقم القومي)</label>
+                  <input type="text" formControlName="national_id" placeholder="29901011234567">
+                </div>
+                <div class="form-group">
+                  <label>رقم الهاتف</label>
+                  <input type="tel" formControlName="phone" placeholder="01XXXXXXXXX">
+                </div>
+                <div class="form-group">
+                  <label>رقم التليفون تليجرام</label>
+                  <input type="tel" formControlName="telegram_phone" placeholder="01XXXXXXXXX">
+                </div>
+                <div class="form-group">
                   <label>تاريخ الميلاد</label>
                   <input type="date" formControlName="birth_date">
                 </div>
                 <div class="form-group">
                   <label>السن</label>
                   <input type="number" formControlName="age" placeholder="25">
+                </div>
+                <div class="form-group">
+                  <label>موعد سداد المقدم</label>
+                  <input type="date" formControlName="advance_payment_date">
                 </div>
                 <div class="form-group full">
                   <label>مقر السكن الدائم</label>
@@ -241,6 +257,10 @@ export class ProfileComponent implements OnInit {
   constructor() {
     this.profileForm = this.fb.group({
       full_name: ['', Validators.required],
+      phone: ['', Validators.required],
+      telegram_phone: [''],
+      national_id: ['', Validators.required],
+      advance_payment_date: ['', Validators.required],
       birth_date: [''],
       age: [null],
       address: ['', Validators.required],
