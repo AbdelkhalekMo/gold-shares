@@ -19,7 +19,7 @@ import Swal from 'sweetalert2';
         </div>
         <h3>كشف معاملات الذهب التفصيلي</h3>
         <div class="print-meta">
-          <p><strong>العضو المشترك:</strong> {{ user?.username || '---' }}</p>
+          <p><strong>العضو المشترك:</strong> {{ user?.username || '---' }} <span *ngIf="user?.member_code">(رقم العضو: {{ user.member_code }})</span></p>
           <p><strong>البريد الإلكتروني:</strong> {{ user?.email || '---' }}</p>
           <p><strong>المقدم والهدية:</strong> مقدم: {{ user?.advance || 0 }} جم | هدية: {{ user?.gift || 0 }} جم</p>
           <p><strong>تاريخ إصدار الكشف:</strong> {{ currentDate | date:'yyyy-MM-dd HH:mm':'Africa/Cairo' }} (بتوقيت القاهرة)</p>
@@ -32,6 +32,9 @@ import Swal from 'sweetalert2';
         <div class="header-left">
           <a routerLink="/admin/users" class="back-link">← العودة للمشتركين</a>
           <h1>معاملات العضو: <span class="text-gradient">{{ user?.username || 'جاري التحميل...' }}</span>
+            <span *ngIf="user?.member_code" style="font-size: 1.2rem; color: var(--primary); font-weight: 800; margin-right: 0.5rem;">
+              ({{ user.member_code }})
+            </span>
             <span *ngIf="user" style="font-size: 1rem; margin-right: 1rem; color: var(--primary);">
               (المقدم: {{ user.advance }} جم | الهدية: {{ user.gift || 0 }} جم)
             </span>
@@ -147,7 +150,7 @@ import Swal from 'sweetalert2';
         </div>
         
         <form (ngSubmit)="addManualTx()" class="modal-body">
-          <p class="modal-intro">سيتم تسجيل هذه المعاملة مباشرة في حساب العضو **({{ user?.username }})** وتحديث أرصدته فوراً دون الحاجة لموافقة إضافية.</p>
+          <p class="modal-intro">سيتم تسجيل هذه المعاملة مباشرة في حساب العضو **({{ user?.username }}){{ user?.member_code ? ' [كود: ' + user.member_code + ']' : '' }}** وتحديث أرصدته فوراً دون الحاجة لموافقة إضافية.</p>
           
           <div class="form-grid">
             <div class="form-group">

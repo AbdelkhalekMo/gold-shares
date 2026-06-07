@@ -21,7 +21,12 @@ import { AuthService } from '../../../core/services/auth.service';
           <div class="user-badge">
             <div class="avatar">👤</div>
             <div class="details">
-              <p class="username">{{ authService.currentUser()?.username }}</p>
+              <p class="username">
+                {{ authService.currentUser()?.username }}
+                <span *ngIf="authService.currentUser()?.member_code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800; margin-right: 0.25rem;">
+                  ({{ authService.currentUser()?.member_code }})
+                </span>
+              </p>
               <p class="role-tag">
                 {{ authService.currentUser()?.role === 'admin' ? 'مدير النظام' : 
                    (authService.currentUser()?.role === 'supervisor' ? 'مشرف مراقب' : 'عضو مساهم') }}

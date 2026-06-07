@@ -15,8 +15,18 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="welcome-section">
           <div class="avatar-emblem">{{ user()?.username?.substring(0, 1)?.toUpperCase() }}</div>
           <div class="welcome-text">
-            <h1 class="islamic-header"><span class="text-gradient">أهلاً بك،</span> {{ user()?.username }}</h1>
-            <p class="subtitle">بارك الله في مالك وزادك من فضله. محفظتك الاستثمارية نشطة حالياً.</p>
+            <h1 class="islamic-header">
+              <span class="text-gradient">أهلاً بك،</span> {{ user()?.username }}
+              <span *ngIf="user()?.member_code" style="font-size: 1.1rem; color: var(--primary); font-weight: 800; margin-right: 0.5rem; vertical-align: middle;">
+                (كود: {{ user()?.member_code }})
+              </span>
+            </h1>
+            <p class="subtitle" style="display: flex; flex-direction: column; gap: 0.25rem;">
+              <span>مرحباً بك في لوحة تحكم جمعية الذهب المشترك. محفظتك الاستثمارية نشطة حالياً.</span>
+              <span *ngIf="user()?.expected_delivery_date" style="color: var(--accent); font-weight: bold; margin-top: 0.25rem;">
+                📅 تاريخ التسليم المتوقع للسهم: {{ user()?.expected_delivery_date }}
+              </span>
+            </p>
           </div>
         </div>
         <div class="quick-actions">
@@ -76,16 +86,29 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
 
-      <!-- Modern Delivery Banner -->
-      <div class="delivery-card animate-spring" *ngIf="user()?.isReceived">
-        <div class="glass-inner">
+      <!-- Modern Delivery Progress Card -->
+      <div class="delivery-card animate-spring" *ngIf="user()">
+        <div class="glass-inner" [class.success]="user()?.isReceived" [class.pending]="!user()?.isReceived">
           <div class="glow-effect"></div>
-          <div class="icon-wrap">✨</div>
+          <div class="icon-wrap">{{ user()?.isReceived ? '👑' : '📦' }}</div>
           <div class="text">
-            <h3>تم استلام الحصة بنجاح</h3>
-            <p>تهانينا! لقد اكتملت رحلتك الادخارية باستلام الذهب.</p>
+            <h3>📦 حالة استلام حصتك للذهب المادي</h3>
+            <p *ngIf="user()?.isReceived">تهانينا! لقد اكتملت رحلتك الادخارية وتم استلام كامل حصتك من الذهب بنجاح ({{ getUserTotalGrams() | number:'1.0-3' }} جم).</p>
+            <p *ngIf="!user()?.isReceived && getDeliveredGrams() > 0">
+              تم تسليمك <span class="highlight-grams">{{ getDeliveredGrams() | number:'1.0-3' }} جم</span> حتى الآن من إجمالي مستحقاتك البالغة <span class="highlight-grams-total">{{ getUserTotalGrams() | number:'1.0-3' }} جم</span>. 
+              المتبقي لتستلمه: <span class="highlight-grams-rem">{{ getRemainingDeliveryGrams() | number:'1.0-3' }} جم</span>.
+            </p>
+            <p *ngIf="!user()?.isReceived && getDeliveredGrams() === 0">
+              بانتظار بدء عملية تسليم الذهب المادي من قِبل الإدارة. إجمالي مستحقاتك البالغة: <span class="highlight-grams-total">{{ getUserTotalGrams() | number:'1.0-3' }} جم</span>.
+            </p>
+            
+            <!-- Delivery Progress Bar -->
+            <div class="delivery-progress-container">
+              <div class="delivery-progress-bar" [style.width.%]="getDeliveryProgress()"></div>
+              <span class="delivery-progress-text">{{ getDeliveryProgress() | number:'1.0-1' }}% تم استلامه</span>
+            </div>
           </div>
-          <div class="badge-modern">مكتمل</div>
+          <div class="badge-modern">{{ user()?.isReceived ? 'مكتمل' : (getDeliveredGrams() > 0 ? 'استلام جزئي' : 'بانتظار الاستلام') }}</div>
         </div>
       </div>
 
@@ -465,14 +488,59 @@ import { AuthService } from '../../../core/services/auth.service';
       }
     }
 
+    /* Delivery Progress Card Styles */
     .delivery-card {
-      .glass-inner {
-        background: rgba(16, 185, 129, 0.1); 
+      margin-bottom: 2.5rem;
+      
+      .glass-inner.success {
+        background: rgba(16, 185, 129, 0.08); 
         border: 1px solid rgba(16, 185, 129, 0.2);
-        .icon-wrap { filter: drop-shadow(0 0 15px var(--accent)); }
-        h3 { font-size: 1.5rem; font-weight: 800; color: #fff; }
-        p { color: #d1fae5; }
+        h3 { color: var(--accent); }
         .badge-modern { background: var(--accent); color: #000; }
+      }
+      .glass-inner.pending {
+        background: rgba(212, 175, 55, 0.04); 
+        border: 1px solid rgba(212, 175, 55, 0.12);
+        h3 { color: var(--primary); }
+        .badge-modern { background: var(--primary); color: #000; }
+      }
+      
+      .text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      
+      .highlight-grams { color: var(--primary); font-weight: 800; }
+      .highlight-grams-total { color: #fff; font-weight: 800; }
+      .highlight-grams-rem { color: #ef4444; font-weight: 800; }
+      
+      .delivery-progress-container {
+        width: 100%;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .delivery-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        border-radius: 10px;
+        transition: width 0.4s ease;
+      }
+      .delivery-progress-text {
+        position: absolute;
+        left: 10px;
+        font-size: 0.7rem;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
       }
     }
 
@@ -781,6 +849,29 @@ export class DashboardComponent implements OnInit {
     const userObj = this.user();
     if (!userObj) return false;
     return Number(userObj.advance || 0) <= 0;
+  }
+
+  getUserTotalGrams(): number {
+    const userObj = this.user();
+    if (!userObj) return 0;
+    return Number(userObj.initial_advance || 0) + Number(userObj.initial_remaining || 0);
+  }
+
+  getDeliveredGrams(): number {
+    const userObj = this.user();
+    if (!userObj) return 0;
+    return Number(userObj.delivered_grams || 0);
+  }
+
+  getRemainingDeliveryGrams(): number {
+    const rem = this.getUserTotalGrams() - this.getDeliveredGrams();
+    return rem > 0 ? rem : 0;
+  }
+
+  getDeliveryProgress(): number {
+    const total = this.getUserTotalGrams();
+    if (!total) return 0;
+    return Math.min(100, (this.getDeliveredGrams() / total) * 100);
   }
 
   ngOnInit() {

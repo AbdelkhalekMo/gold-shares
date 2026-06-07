@@ -16,6 +16,9 @@ export interface User {
   gift?: number;
   initial_advance?: number;
   initial_remaining?: number;
+  member_code?: string;
+  delivered_grams?: number;
+  expected_delivery_date?: string;
 }
 
 export interface Transaction {
@@ -50,6 +53,10 @@ export interface Stats {
 export interface UserProfile {
   id: string;
   full_name: string;
+  phone?: string;
+  telegram_phone?: string;
+  national_id?: string;
+  advance_payment_date?: string;
   birth_date: string;
   age: number;
   address: string;

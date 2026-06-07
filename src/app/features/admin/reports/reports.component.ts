@@ -36,7 +36,7 @@ interface UserStatement {
             <label for="user-select">👤 المساهم</label>
             <select id="user-select" [(ngModel)]="selectedUserId" (change)="onFilterChange()">
               <option value="all">كل المساهمين</option>
-              <option *ngFor="let u of users" [value]="u.id">{{ u.username }} ({{ u.email }})</option>
+              <option *ngFor="let u of users" [value]="u.id">{{ u.username }}{{ u.member_code ? ' (كود: ' + u.member_code + ')' : '' }} ({{ u.email }})</option>
             </select>
           </div>
 
@@ -147,7 +147,7 @@ interface UserStatement {
             <div class="unpaid-users-scroll">
               <div class="user-strip-badge" *ngFor="let u of getUnpaidAdvanceUsers()">
                 <span class="user-dot red"></span>
-                <span class="name">{{ u.username }}</span>
+                <span class="name">{{ u.username }} <span *ngIf="u.member_code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;">({{ u.member_code }})</span></span>
                 <span class="badge-mini text-alert" [class.gold]="u.share_type === 'full'" [class.emerald]="u.share_type === 'half'" [class.purple]="u.share_type === 'custom'">
                   {{ u.share_type === 'full' ? 'كامل' : (u.share_type === 'half' ? 'نصف' : 'مخصص') }} (المتبقي: {{ getRemainingCashAdvance(u) }} جم | هدية: {{ u.gift || 0 }} جم)
                 </span>
@@ -163,7 +163,7 @@ interface UserStatement {
             <div class="paid-users-scroll">
               <div class="user-strip-badge" *ngFor="let u of getPaidAdvanceUsers()">
                 <span class="user-dot green"></span>
-                <span class="name">{{ u.username }}</span>
+                <span class="name">{{ u.username }} <span *ngIf="u.member_code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;">({{ u.member_code }})</span></span>
                 <span class="badge-mini" [class.gold]="u.share_type === 'full'" [class.emerald]="u.share_type === 'half'" [class.purple]="u.share_type === 'custom'">
                   {{ u.share_type === 'full' ? 'كامل' : (u.share_type === 'half' ? 'نصف' : 'مخصص') }} (تم السداد | هدية: {{ u.gift || 0 }} جم)
                 </span>
@@ -204,7 +204,12 @@ interface UserStatement {
                 </td>
                 <td>
                   <div class="user-cell">
-                    <span class="user-name">{{ row.user.username }}</span>
+                    <span class="user-name">
+                      {{ row.user.username }}
+                      <span *ngIf="row.user.member_code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800; margin-right: 0.25rem;">
+                        ({{ row.user.member_code }})
+                      </span>
+                    </span>
                     <span class="user-email">{{ row.user.email }}</span>
                   </div>
                 </td>
@@ -236,7 +241,12 @@ interface UserStatement {
             <div class="mc-header">
               <input class="mc-checkbox" type="checkbox" [(ngModel)]="row.selected" (change)="cdr.markForCheck()">
               <div class="mc-user">
-                <div class="mc-name">{{ row.user.username }}</div>
+                <div class="mc-name">
+                  {{ row.user.username }}
+                  <span *ngIf="row.user.member_code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800; margin-right: 0.25rem;">
+                    ({{ row.user.member_code }})
+                  </span>
+                </div>
                 <div class="mc-email">{{ row.user.email }}</div>
               </div>
               <span class="share-badge" [class.gold]="row.user.share_type === 'full'" [class.emerald]="row.user.share_type === 'half'" [class.purple]="row.user.share_type === 'custom'">
@@ -327,7 +337,12 @@ interface UserStatement {
               <div class="info-grid">
                 <div class="info-item">
                   <span class="label">اسم المساهم:</span>
-                  <span class="value font-bold">{{ previewStatement.user.username }}</span>
+                  <span class="value font-bold">
+                    {{ previewStatement.user.username }}
+                    <span *ngIf="previewStatement.user.member_code" style="color: var(--primary); font-weight: 800; margin-right: 0.25rem;">
+                      ({{ previewStatement.user.member_code }})
+                    </span>
+                  </span>
                 </div>
                 <div class="info-item">
                   <span class="label">البريد الإلكتروني:</span>
@@ -506,7 +521,7 @@ interface UserStatement {
               <ng-container *ngFor="let row of userStatements">
                 <tr *ngIf="row.selected">
                    <td class="font-bold">
-                     <div>{{ row.user.username }}</div>
+                     <div>{{ row.user.username }} <span *ngIf="row.user.member_code" style="font-size: 8pt; font-weight: 800; color: var(--primary);">({{ row.user.member_code }})</span></div>
                      <div style="font-size: 8pt; font-weight: normal; color: #444;">
                        المقدم: {{ row.user.advance }} جم | الهدية: {{ row.user.gift || 0 }} جم
                      </div>
@@ -580,7 +595,7 @@ interface UserStatement {
           <div class="info-grid">
             <div class="info-item">
               <span class="label">اسم المساهم:</span>
-              <span class="value font-bold">{{ statement.user.username }}</span>
+              <span class="value font-bold">{{ statement.user.username }} <span *ngIf="statement.user.member_code" style="font-size: 0.95rem; font-weight: 800; color: var(--primary);">({{ statement.user.member_code }})</span></span>
             </div>
             <div class="info-item">
               <span class="label">البريد الإلكتروني:</span>

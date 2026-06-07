@@ -30,7 +30,7 @@ import { DataService } from '../../../core/services/data.service';
             <a routerLink="/admin/all-transactions" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">📜</span> <span class="label">سجل العمليات</span>
             </a>
-            <a *ngIf="authService.currentUser()?.role === 'admin'" routerLink="/admin/reports" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+            <a *ngIf="authService.isStaff()" routerLink="/admin/reports" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                <span class="icon">🖨️</span> <span class="label">كشوف الحسابات</span>
             </a>
             <a routerLink="/admin/transactions" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
@@ -61,7 +61,12 @@ import { DataService } from '../../../core/services/data.service';
           <div class="user-profile-summary">
             <div class="avatar-small">👤</div>
             <div class="details-small">
-              <p class="username-small">{{ authService.currentUser()?.username }}</p>
+              <p class="username-small">
+                {{ authService.currentUser()?.username }}
+                <span *ngIf="authService.currentUser()?.member_code" style="font-size: 0.7rem; color: var(--primary); font-weight: 800; display: block; margin-top: 0.1rem;">
+                  (كود: {{ authService.currentUser()?.member_code }})
+                </span>
+              </p>
               <p class="role-tag-small">
                 {{ authService.currentUser()?.role === 'admin' ? 'مدير النظام' : 
                    (authService.currentUser()?.role === 'supervisor' ? 'مشرف مراقب' : 'عضو مساهم') }}

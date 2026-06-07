@@ -114,7 +114,15 @@ import Swal from 'sweetalert2';
                   <td>
                     <div class="user-cell">
                       <div class="user-avatar">{{ user.username.charAt(0) }}</div>
-                      <span class="username">{{ user.username }}</span>
+                      <div style="display: flex; flex-direction: column;">
+                        <span class="username">{{ user.username }}</span>
+                        <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="user.member_code">
+                          رقم العضو: {{ user.member_code }}
+                        </span>
+                        <span class="delivery-date" style="font-size: 0.7rem; color: var(--text-muted);" *ngIf="user.expected_delivery_date">
+                          التسليم المتوقع: {{ user.expected_delivery_date }}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td class="email-cell">{{ user.email }}</td>
@@ -131,6 +139,7 @@ import Swal from 'sweetalert2';
                   <td class="text-success font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
                   <td class="text-danger font-bold">{{ user.remaining }} جم</td>
                   <td class="actions">
+                    <button (click)="openEditModal(user)" class="action-btn edit" title="تعديل بيانات العضو">✏️</button>
                     <a [routerLink]="['/admin/transactions', user.id]" class="action-btn view" title="سجل المعاملات الحسابية">👁️</a>
                     
                     <!-- Promote / Demote Role toggle button -->
@@ -154,6 +163,12 @@ import Swal from 'sweetalert2';
                   <div class="user-meta">
                     <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                       <span class="username">{{ user.username }}</span>
+                      <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800; display: block; margin-top: 0.15rem;" *ngIf="user.member_code">
+                        رقم العضو: {{ user.member_code }}
+                      </span>
+                      <span class="delivery-date" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 0.1rem;" *ngIf="user.expected_delivery_date">
+                        التسليم المتوقع: {{ user.expected_delivery_date }}
+                      </span>
                       <span *ngIf="user.role === 'supervisor'" class="badge-modern supervisor-badge mobile-badge">مشرف</span>
                     </div>
                     <span class="user-email">{{ user.email }}</span>
@@ -184,6 +199,10 @@ import Swal from 'sweetalert2';
               </div>
 
               <div class="card-actions-user">
+                <button (click)="openEditModal(user)" class="btn-action-mobile edit" style="background: rgba(234, 179, 8, 0.1); color: var(--accent);">
+                  <span>✏️ تعديل البيانات</span>
+                </button>
+
                 <a [routerLink]="['/admin/transactions', user.id]" class="btn-action-mobile view">
                   <span>👁️ المعاملات</span>
                 </a>
@@ -220,6 +239,20 @@ import Swal from 'sweetalert2';
         
         <form (ngSubmit)="addUser()" class="modal-body">
           <div class="form-grid">
+            <div class="form-group">
+              <label>رقم/كود العضو الخاص (ID)</label>
+              <div class="input-modern">
+                <input type="text" [(ngModel)]="newUser.member_code" name="member_code" required placeholder="مثال: GS-105">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>تاريخ التسليم المتوقع للسهم</label>
+              <div class="input-modern">
+                <input type="text" [(ngModel)]="newUser.expected_delivery_date" name="expected_delivery_date" placeholder="مثال: أكتوبر 2026 أو 2026-10-15">
+              </div>
+            </div>
+            
             <div class="form-group">
               <label>الاسم الكامل</label>
               <div class="input-modern">
@@ -295,6 +328,98 @@ import Swal from 'sweetalert2';
             <button type="button" class="btn btn-glass" (click)="showModal = false">إلغاء</button>
             <button type="submit" class="btn btn-primary" [disabled]="saving">
               {{ saving ? 'جاري المعالجة...' : 'تأكيد التسجيل' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Advanced Modern Modal: Edit User -->
+    <div class="modal-wrapper" *ngIf="showEditModal" (click)="onOverlayClick($event)">
+      <div class="modal-glass animate-spring">
+        <div class="modal-header">
+          <h2 class="text-gradient">تعديل بيانات العضو</h2>
+          <button class="close-btn" (click)="showEditModal = false">×</button>
+        </div>
+        
+        <form (ngSubmit)="saveEditUser()" class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>رقم/كود العضو الخاص (ID)</label>
+              <div class="input-modern">
+                <input type="text" [(ngModel)]="editingUser.member_code" name="member_code" required placeholder="مثال: GS-105">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>تاريخ التسليم المتوقع للسهم</label>
+              <div class="input-modern">
+                <input type="text" [(ngModel)]="editingUser.expected_delivery_date" name="expected_delivery_date" placeholder="مثال: أكتوبر 2026 أو 2026-10-15">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>الاسم الكامل</label>
+              <div class="input-modern">
+                <input type="text" [(ngModel)]="editingUser.username" name="username" required placeholder="اسم المشترك">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <div class="input-modern">
+                <input type="email" [(ngModel)]="editingUser.email" name="email" required dir="ltr" placeholder="mail@example.com">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>كلمة المرور الجديدة (اختياري)</label>
+              <div class="input-modern">
+                <input type="password" [(ngModel)]="editingUser.password" name="password" dir="ltr" placeholder="اتركه فارغاً لعدم التغيير">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>نوع السهم الاستثماري</label>
+              <div class="input-modern select-wrapper">
+                <select [(ngModel)]="editingUser.share_type" name="share_type" required>
+                  <option value="full">سهم كامل (المقدم المطلوب: {{ settings.full_share_advance + (settings.full_share_gift || 0) }} جم [منهم {{ settings.full_share_gift || 0 }} هدية] - متبقي {{ settings.full_share_total - settings.full_share_advance - (settings.full_share_gift || 0) }} جم)</option>
+                  <option value="half">نصف سهم (المقدم المطلوب: {{ settings.half_share_advance + (settings.half_share_gift || 0) }} جم [منهم {{ settings.half_share_gift || 0 }} هدية] - متبقي {{ (settings.full_share_total / 2.0) - settings.half_share_advance - (settings.half_share_gift || 0) }} جم)</option>
+                  <option value="custom">مخصص (إدخال يدوي للمقدم، الإجمالي، والهدية)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Inputs for Custom Share Type -->
+          <div class="custom-share-fields animate-spring" *ngIf="editingUser.share_type === 'custom'">
+            <h3 class="text-gradient-gold">⚙️ تفاصيل السهم المخصص</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>إجمالي وزن السهم (جم)</label>
+                <div class="input-modern">
+                  <input type="number" step="0.01" [(ngModel)]="customTotal" name="customTotal" required placeholder="مثال: 15.75">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>مقدم السهم المالي (جم)</label>
+                <div class="input-modern">
+                  <input type="number" step="0.01" [(ngModel)]="customAdvance" name="customAdvance" required placeholder="مثال: 2.5">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>وزن الهدية الذهبية (جم)</label>
+                <div class="input-modern">
+                  <input type="number" step="0.01" [(ngModel)]="customGift" name="customGift" placeholder="مثال: 0.5 (اختياري)">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-glass" (click)="showEditModal = false">إلغاء</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'جاري الحفظ...' : 'حفظ التعديلات' }}
             </button>
           </div>
         </form>
@@ -715,6 +840,8 @@ export class UsersComponent implements OnInit {
   loading = true;
   saving = false;
   showModal = false;
+  showEditModal = false;
+  editingUser: any = null;
 
   settings = {
     full_share_total: 31.5,
@@ -725,7 +852,7 @@ export class UsersComponent implements OnInit {
   };
   savingSettings = false;
 
-  newUser = { username: '', email: '', password: '', share_type: 'full' as ShareType, role: 'user' };
+  newUser = { username: '', email: '', password: '', share_type: 'full' as ShareType, role: 'user', member_code: '', expected_delivery_date: '' };
 
   customTotal: number | null = null;
   customAdvance: number | null = null;
@@ -805,8 +932,18 @@ export class UsersComponent implements OnInit {
   }
 
   async addUser() {
-    if (!this.newUser.username || !this.newUser.email || !this.newUser.password) return;
+    if (!this.newUser.username || !this.newUser.email || !this.newUser.password || !this.newUser.member_code) {
+      Swal.fire('تنبيه', 'يرجى ملء جميع الحقول المطلوبة بما فيها كود العضو', 'warning');
+      return;
+    }
     this.saving = true;
+
+    const cleanCode = this.newUser.member_code.trim();
+    if (this.users.some(u => u.member_code && u.member_code.trim().toLowerCase() === cleanCode.toLowerCase())) {
+      Swal.fire('تنبيه', 'رقم/كود العضو مستخدم بالفعل لمشترك آخر. يرجى إدخال كود فريد.', 'warning');
+      this.saving = false;
+      return;
+    }
 
     if (this.newUser.share_type === 'custom') {
       if (!this.customTotal || this.customTotal <= 0) {
@@ -868,7 +1005,9 @@ export class UsersComponent implements OnInit {
       totalAmount: 0,
       isReceived: false,
       role: this.newUser.role || 'user',
-      gift: gift
+      gift: gift,
+      member_code: cleanCode,
+      expected_delivery_date: this.newUser.expected_delivery_date || null
     };
 
     const { error } = await this.dataService.addUser(userToSave);
@@ -877,7 +1016,7 @@ export class UsersComponent implements OnInit {
     } else {
       Swal.fire({ title: 'تمت الإضافة', text: 'تم إضافة العضو بنجاح وتعيين رتبته', icon: 'success', timer: 1500, showConfirmButton: false });
       this.showModal = false;
-      this.newUser = { username: '', email: '', password: '', share_type: 'full', role: 'user' };
+      this.newUser = { username: '', email: '', password: '', share_type: 'full', role: 'user', member_code: '', expected_delivery_date: '' };
       this.customTotal = null;
       this.customAdvance = null;
       this.customGift = null;
@@ -938,6 +1077,104 @@ export class UsersComponent implements OnInit {
   onOverlayClick(event: MouseEvent) {
     if ((event.target as HTMLElement).classList.contains('modal-wrapper')) {
       this.showModal = false;
+      this.showEditModal = false;
     }
+  }
+
+  openEditModal(user: any) {
+    this.editingUser = { ...user, password: '' };
+    if (this.editingUser.share_type === 'custom') {
+      this.customTotal = Number(this.editingUser.remaining || 0) + Number(this.editingUser.advance || 0);
+      this.customAdvance = Number(this.editingUser.advance || 0) - Number(this.editingUser.gift || 0);
+      this.customGift = Number(this.editingUser.gift || 0);
+    } else {
+      this.customTotal = null;
+      this.customAdvance = null;
+      this.customGift = null;
+    }
+    this.showEditModal = true;
+  }
+
+  async saveEditUser() {
+    if (!this.editingUser.username || !this.editingUser.email || !this.editingUser.member_code) {
+      Swal.fire('تنبيه', 'يرجى ملء جميع الحقول المطلوبة بما فيها كود العضو', 'warning');
+      return;
+    }
+    this.saving = true;
+
+    const cleanCode = this.editingUser.member_code.trim();
+    if (this.users.some(u => u.id !== this.editingUser.id && u.member_code && u.member_code.trim().toLowerCase() === cleanCode.toLowerCase())) {
+      Swal.fire('تنبيه', 'رقم/كود العضو مستخدم بالفعل لمشترك آخر. يرجى إدخال كود فريد.', 'warning');
+      this.saving = false;
+      return;
+    }
+
+    let advance = Number(this.editingUser.advance || 0);
+    let remaining = Number(this.editingUser.remaining || 0);
+    let gift = Number(this.editingUser.gift || 0);
+
+    if (this.editingUser.share_type === 'full') {
+      const fullTotal = this.settings.full_share_total;
+      const fullAdvance = this.settings.full_share_advance;
+      const fullGift = this.settings.full_share_gift || 0;
+      advance = fullAdvance + fullGift;
+      remaining = fullTotal - fullGift - fullAdvance;
+      gift = fullGift;
+    } else if (this.editingUser.share_type === 'half') {
+      const fullTotal = this.settings.full_share_total;
+      const halfAdvance = this.settings.half_share_advance;
+      const halfTotal = fullTotal / 2.0;
+      const halfGift = this.settings.half_share_gift || 0;
+      advance = halfAdvance + halfGift;
+      remaining = halfTotal - halfGift - halfAdvance;
+      gift = halfGift;
+    } else if (this.editingUser.share_type === 'custom') {
+      if (!this.customTotal || this.customTotal <= 0) {
+        Swal.fire('تنبيه', 'يرجى إدخال إجمالي الجرامات المخصصة بشكل صحيح', 'warning');
+        this.saving = false;
+        return;
+      }
+      if (this.customAdvance === null || this.customAdvance < 0) {
+        Swal.fire('تنبيه', 'يرجى إدخال قيمة المقدم المخصص بشكل صحيح', 'warning');
+        this.saving = false;
+        return;
+      }
+      const total = Number(this.customTotal || 0);
+      const adv = Number(this.customAdvance || 0);
+      const giftVal = Number(this.customGift || 0);
+      
+      advance = adv + giftVal;
+      remaining = (total - giftVal) - adv;
+      gift = giftVal;
+    }
+
+    const updates: any = {
+      username: this.editingUser.username,
+      email: this.editingUser.email,
+      share_type: this.editingUser.share_type,
+      advance: advance,
+      remaining: remaining,
+      gift: gift,
+      member_code: cleanCode,
+      expected_delivery_date: this.editingUser.expected_delivery_date || null
+    };
+
+    if (this.editingUser.password && this.editingUser.password.trim()) {
+      updates.password = this.editingUser.password;
+    }
+
+    const { error } = await this.dataService.updateUser(this.editingUser.id, updates);
+    if (error) {
+      Swal.fire('خطأ', error.message, 'error');
+    } else {
+      Swal.fire({ title: 'تم التحديث', text: 'تم تحديث بيانات العضو بنجاح', icon: 'success', timer: 1500, showConfirmButton: false });
+      this.showEditModal = false;
+      this.editingUser = null;
+      this.customTotal = null;
+      this.customAdvance = null;
+      this.customGift = null;
+      this.loadUsers();
+    }
+    this.saving = false;
   }
 }

@@ -43,7 +43,12 @@ import { getCairoDate } from '../../../core/utils/date-utils';
                 <td>
                   <div class="user-cell">
                     <div class="user-avatar">{{ user.username.charAt(0) }}</div>
-                    <span class="username">{{ user.username }}</span>
+                    <div style="display: flex; flex-direction: column;">
+                      <span class="username">{{ user.username }}</span>
+                      <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="user.member_code">
+                        رقم العضو: {{ user.member_code }}
+                      </span>
+                    </div>
                   </div>
                 </td>
                 <td>
@@ -71,6 +76,9 @@ import { getCairoDate } from '../../../core/utils/date-utils';
                 <div class="user-avatar">{{ user.username.charAt(0) }}</div>
                 <div style="display: flex; flex-direction: column; gap: 0.1rem;">
                   <span class="username">{{ user.username }}</span>
+                  <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="user.member_code">
+                    رقم العضو: {{ user.member_code }}
+                  </span>
                   <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);">
                     المقدم: {{ user.advance }} جم | الهدية: {{ user.gift || 0 }} جم
                   </span>

@@ -31,12 +31,11 @@ import Swal from 'sweetalert2';
                 <tr>
                   <th>المشترك</th>
                   <th>نوع الحصة</th>
-                  <th>المقدم</th>
-                  <th>الهدية</th>
-                  <th>إجمالي المسدد</th>
-                  <th>الرصيد المتبقي</th>
-                  <th>حالة الاستلام</th>
-                  <th>إجراء</th>
+                  <th>الوزن الكلي للسهم</th>
+                  <th>ما تم استلامه</th>
+                  <th>المتبقي للاستلام</th>
+                  <th>تسليم وزن محدد</th>
+                  <th>الحالة</th>
                 </tr>
               </thead>
               <tbody>
@@ -44,7 +43,12 @@ import Swal from 'sweetalert2';
                   <td>
                     <div class="user-cell">
                       <div class="user-avatar">{{ user.username.charAt(0) }}</div>
-                      <span class="username">{{ user.username }}</span>
+                      <div style="display: flex; flex-direction: column;">
+                        <span class="username">{{ user.username }}</span>
+                        <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="user.member_code">
+                          رقم العضو: {{ user.member_code }}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -52,21 +56,29 @@ import Swal from 'sweetalert2';
                       {{ user.share_type === 'full' ? 'سهم كامل' : (user.share_type === 'half' ? 'نصف سهم' : 'سهم مخصص') }}
                     </span>
                   </td>
-                  <td class="font-bold text-accent">{{ user.advance }} جم</td>
-                  <td class="font-bold text-warning">{{ user.gift || 0 }} جم</td>
-                  <td class="text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</td>
-                  <td class="text-danger font-bold">{{ user.remaining }} جم</td>
-                  <td>
-                    <div class="status-wrap" [ngClass]="user.isReceived ? 'received' : 'pending'">
-                      <span class="dot"></span>
-                      {{ user.isReceived ? 'تم الاستلام' : 'بانتظار التسليم' }}
-                    </div>
+                  <td class="font-bold text-accent">
+                    {{ (user.initial_advance || 0) + (user.initial_remaining || 0) | number:'1.0-3' }} جم
+                  </td>
+                  <td class="font-bold text-success">
+                    {{ user.delivered_grams || 0 | number:'1.0-3' }} جم
+                  </td>
+                  <td class="font-bold text-danger">
+                    {{ ((user.initial_advance || 0) + (user.initial_remaining || 0)) - (user.delivered_grams || 0) | number:'1.0-3' }} جم
                   </td>
                   <td>
-                    <button *ngIf="!user.isReceived" (click)="markAsReceived(user)" class="btn btn-primary btn-mini">
-                      📦 تأكيد الاستلام
-                    </button>
-                    <span *ngIf="user.isReceived" class="text-done">✨ اكتملت العملية</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;" *ngIf="(((user.initial_advance || 0) + (user.initial_remaining || 0)) - (user.delivered_grams || 0)) > 0">
+                      <input type="number" step="0.001" placeholder="الوزن" style="width: 80px; padding: 0.4rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: #fff; text-align: center;" #deliverInput>
+                      <button (click)="deliverGrams(user, +deliverInput.value)" class="btn btn-primary btn-mini" style="padding: 0.4rem 0.8rem;">
+                        تسليم
+                      </button>
+                    </div>
+                    <span *ngIf="(((user.initial_advance || 0) + (user.initial_remaining || 0)) - (user.delivered_grams || 0)) <= 0" class="text-done">✨ مكتمل</span>
+                  </td>
+                  <td>
+                    <div class="status-wrap" [ngClass]="user.delivered_grams >= ((user.initial_advance || 0) + (user.initial_remaining || 0)) ? 'received' : (user.delivered_grams > 0 ? 'partial' : 'pending')">
+                      <span class="dot"></span>
+                      {{ user.delivered_grams >= ((user.initial_advance || 0) + (user.initial_remaining || 0)) ? 'تم استلام جميع الجرامات' : (user.delivered_grams > 0 ? 'تم استلام جزء' : 'بانتظار التسليم') }}
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -81,8 +93,8 @@ import Swal from 'sweetalert2';
                   <div class="user-avatar">{{ user.username.charAt(0) }}</div>
                   <div style="display: flex; flex-direction: column; gap: 0.1rem;">
                     <span class="username">{{ user.username }}</span>
-                    <span class="user-sub-info" style="font-size: 0.75rem; color: var(--primary);">
-                      المقدم: {{ user.advance }} جم | الهدية: {{ user.gift || 0 }} جم
+                    <span class="member-code" style="font-size: 0.75rem; color: var(--primary); font-weight: 800;" *ngIf="user.member_code">
+                      رقم العضو: {{ user.member_code }}
                     </span>
                   </div>
                 </div>
@@ -93,27 +105,36 @@ import Swal from 'sweetalert2';
               
               <div class="card-body-delivery">
                 <div class="stat-item">
-                  <span class="label">إجمالي المسدد:</span>
-                  <span class="value text-accent font-bold">{{ user.paid | number:'1.0-3' }} جم</span>
+                  <span class="label">الوزن الكلي للسهم:</span>
+                  <span class="value text-accent font-bold">{{ (user.initial_advance || 0) + (user.initial_remaining || 0) | number:'1.0-3' }} جم</span>
                 </div>
                 <div class="stat-item">
-                  <span class="label">الرصيد المتبقي:</span>
-                  <span class="value text-danger font-bold">{{ user.remaining }} جم</span>
+                  <span class="label">ما تم استلامه:</span>
+                  <span class="value text-success font-bold">{{ user.delivered_grams || 0 | number:'1.0-3' }} جم</span>
                 </div>
-                <div class="stat-item full-width">
+                <div class="stat-item">
+                  <span class="label">المتبقي للاستلام:</span>
+                  <span class="value text-danger font-bold">{{ ((user.initial_advance || 0) + (user.initial_remaining || 0)) - (user.delivered_grams || 0) | number:'1.0-3' }} جم</span>
+                </div>
+                <div class="stat-item">
                   <span class="label">حالة الاستلام:</span>
-                  <div class="status-wrap" [ngClass]="user.isReceived ? 'received' : 'pending'">
+                  <div class="status-wrap" [ngClass]="user.delivered_grams >= ((user.initial_advance || 0) + (user.initial_remaining || 0)) ? 'received' : (user.delivered_grams > 0 ? 'partial' : 'pending')">
                     <span class="dot"></span>
-                    {{ user.isReceived ? 'تم الاستلام' : 'بانتظار التسليم' }}
+                    {{ user.delivered_grams >= ((user.initial_advance || 0) + (user.initial_remaining || 0)) ? 'تم استلام جميع الجرامات' : (user.delivered_grams > 0 ? 'تم استلام جزء' : 'بانتظار التسليم') }}
                   </div>
                 </div>
               </div>
 
-              <div class="card-actions-delivery">
-                <button *ngIf="!user.isReceived" (click)="markAsReceived(user)" class="btn-action-delivery btn-primary">
-                  📦 تأكيد التسليم وتوثيق الحالة
-                </button>
-                <span *ngIf="user.isReceived" class="text-done">✨ اكتملت عملية الاستلام بنجاح</span>
+              <div class="card-actions-delivery" *ngIf="(((user.initial_advance || 0) + (user.initial_remaining || 0)) - (user.delivered_grams || 0)) > 0">
+                <div style="display: flex; width: 100%; gap: 0.5rem;">
+                  <input type="number" step="0.001" placeholder="وزن التسليم" style="flex: 1; padding: 0.85rem; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: #fff; text-align: center;" #mobileDeliverInput>
+                  <button (click)="deliverGrams(user, +mobileDeliverInput.value)" class="btn-action-delivery btn-primary" style="flex: 1; width: auto; margin: 0;">
+                    📦 تسليم الوزن
+                  </button>
+                </div>
+              </div>
+              <div class="card-actions-delivery" *ngIf="(((user.initial_advance || 0) + (user.initial_remaining || 0)) - (user.delivered_grams || 0)) <= 0">
+                <span class="text-done">✨ تم تسليم جميع الجرامات بالكامل</span>
               </div>
             </div>
           </div>
@@ -150,6 +171,7 @@ import Swal from 'sweetalert2';
       display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; border-radius: 100px; font-size: 0.85rem; font-weight: 800;
       .dot { width: 8px; height: 8px; border-radius: 50%; }
       &.received { background: rgba(16, 185, 129, 0.1); color: var(--accent); .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); } }
+      &.partial { background: rgba(245, 158, 11, 0.1); color: #f59e0b; .dot { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; } }
       &.pending { background: rgba(212, 175, 55, 0.1); color: var(--primary); .dot { background: var(--primary); box-shadow: 0 0 10px var(--primary); animation: pulse 1.5s infinite; } }
     }
 
@@ -322,17 +344,48 @@ export class DeliveriesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  async markAsReceived(user: any) {
+  async deliverGrams(user: any, amount: number) {
+    const totalGrams = (user.initial_advance || 0) + (user.initial_remaining || 0);
+    const currentDelivered = user.delivered_grams || 0;
+    const remaining = totalGrams - currentDelivered;
+
+    if (!amount || amount <= 0) {
+      Swal.fire('تنبيه', 'يرجى إدخال كمية صحيحة أكبر من الصفر للتسليم', 'warning');
+      return;
+    }
+
+    if (amount > remaining) {
+      Swal.fire('تنبيه', `الكمية المدخلة (${amount} جم) أكبر من الكمية المتبقية للتسليم (${remaining} جم)`, 'warning');
+      return;
+    }
+
     const res = await Swal.fire({
-      title: 'تأكيد التسليم؟',
-      text: `سيتم تغيير حالة "${user.username}" إلى "تم الاستلام"`,
-      icon: 'question', showCancelButton: true,
-      confirmButtonText: 'نعم، تم التسليم', cancelButtonText: 'إلغاء', confirmButtonColor: '#d4ff00'
+      title: 'تأكيد عملية التسليم؟',
+      text: `سيتم تسليم ${amount} جرام ذهب للعضو "${user.username}"`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'نعم، تأكيد التسليم',
+      cancelButtonText: 'إلغاء',
+      confirmButtonColor: 'var(--primary)'
     });
+
     if (res.isConfirmed) {
-      const { error } = await this.dataService.updateUser(user.id, { isReceived: true });
-      if (error) { Swal.fire('خطأ', error.message, 'error'); }
-      else { this.loadUsers(); }
+      this.loading = true;
+      const newDelivered = Number((currentDelivered + amount).toFixed(3));
+      const updates: any = {
+        delivered_grams: newDelivered,
+        isReceived: newDelivered >= totalGrams
+      };
+
+      const { error } = await this.dataService.updateUser(user.id, updates);
+      if (error) {
+        Swal.fire('خطأ', error.message, 'error');
+      } else {
+        Swal.fire('تم بنجاح', `تم تسليم ${amount} جم بنجاح.`, 'success');
+        await this.loadUsers();
+      }
+      this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 }
